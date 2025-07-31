@@ -185,7 +185,7 @@ export const BG3CONFIG = {
         "--bg3-active-background-color-hover": "var(--bg3-background-color-hover)",
         "--bg3-active-text-color": "var(--bg3-text-color)",
         "--bg3-active-text-color-hover": "var(--bg3-text-color-hover)",
-        "--bg3-active-cell-size": "31px",
+        "--bg3-active-cell-size": "40px",
         "--bg3-active-border-size": "var(--bg3-border-size)",
         "--bg3-rest-border-color": "var(--bg3-border-color)",
         "--bg3-rest-border-color-hover": "var(--bg3-border-color-hover)",

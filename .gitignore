@@ -2,3 +2,5 @@
 .cursorignore
 TODO.md
 packs
+.vscode
+.DS_Store

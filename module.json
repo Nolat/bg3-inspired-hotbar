@@ -2,7 +2,7 @@
   "id": "bg3-inspired-hotbar",
   "title": "BG3 Inspired HUD",
   "description": "A custom, persistent, token-specific HUD inspired by Baldur's Gate 3's interface. Provides an intuitive and modern way to manage abilities, spells, and effects for your tokens.",
-  "version": "3.3.0",
+  "version": "3.3.1",
   "authors": [
     {
       "name": "BragginRites",
@@ -13,18 +13,18 @@
       "name": "Dapoulp",
       "discord": "Poulp#3418",
       "flags": {}
+    },
+    {
+      "name": "Nolat",
+      "flags": {}
     }
   ],
   "compatibility": {
     "minimum": "13",
     "verified": "13.346"
   },
-  "esmodules": [
-    "scripts/module.js"
-  ],
-  "styles": [
-    "styles/index.css"
-  ],
+  "esmodules": ["scripts/module.js"],
+  "styles": ["styles/index.css"],
   "languages": [
     {
       "lang": "en",
@@ -82,11 +82,11 @@
     ]
   },
   "persistentStorage": true,
-  "url": "https://github.com/BragginRites/bg3-inspired-hotbar",
-  "manifest": "https://github.com/BragginRites/bg3-inspired-hotbar/releases/download/v3.3.0/module.json",
-  "download": "https://github.com/BragginRites/bg3-inspired-hotbar/releases/download/v3.3.0/bg3-inspired-hotbar.zip",
+  "url": "https://github.com/Nolat/bg3-inspired-hotbar",
+  "manifest": "https://github.com/Nolat/bg3-inspired-hotbar/releases/download/latest/module.json",
+  "download": "https://github.com/Nolat/bg3-inspired-hotbar/releases/download/latest/bg3-inspired-hotbar.zip",
   "readme": "README.md",
-  "bugs": "https://github.com/BragginRites/bg3-inspired-hotbar/issues",
+  "bugs": "https://github.com/Nolat/bg3-inspired-hotbar/issues",
   "packs": [
     {
       "name": "bg3-inspired-hud",

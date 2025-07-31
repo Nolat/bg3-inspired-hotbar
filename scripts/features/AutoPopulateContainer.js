@@ -187,7 +187,11 @@ export class AutoPopulateDialog extends Dialog {
               } else {
                 // Handle main type (e.g., "weapon")
                 if (item.type === selectedType) {
-                  includeItem = true;
+                  if (item.type === "feat") {
+                    includeItem = item.labels.featType != game.i18n.localize('DND5E.Passive')
+                  } else {
+                    includeItem = true;
+                  }
                   break;
                 }
               }

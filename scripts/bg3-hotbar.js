@@ -124,8 +124,10 @@ export class BG3Hotbar extends Application {
 
         if(this.manager.canGMHotbar() && ControlsManager.isSettingLocked('deselect')) return;
         this.generateTimeout = setTimeout(async () => {
-            if (((!controlled && !canvas.tokens.controlled.length) || canvas.tokens.controlled.length > 1) && !ControlsManager.isSettingLocked('deselect')) {
-                if (!canvas.tokens.controlled.length || canvas.tokens.controlled.length > 1) this.generate(null);
+            if (game.user.isGM && game.settings.get(BG3CONFIG.MODULE_NAME, 'enableGMHotbar')) {
+                if (((!controlled && !canvas.tokens.controlled.length) || canvas.tokens.controlled.length > 1) && !ControlsManager.isSettingLocked('deselect')) {
+                    if (!canvas.tokens.controlled.length || canvas.tokens.controlled.length > 1) this.generate(null);
+                }
             }
             if (!controlled || !canvas.tokens.controlled.length || canvas.tokens.controlled.length > 1) return;
 
