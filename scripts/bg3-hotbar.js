@@ -246,18 +246,11 @@ export class BG3Hotbar extends Application {
      * @param {HTMLElement} html - The rendered HTML
      */
     async _onRenderActivityDialog(app, html) {
-        console.log('BG3 Target Selector | Dialog rendered:', {
-            appConstructor: app.constructor.name,
-            appOptions: app.options,
-            hasClasses: app.options?.classes,
-            hasDnd5e2: app.options?.classes?.includes?.('dnd5e2'),
-            hasActivityElements: html.querySelectorAll('[data-activity-id]').length,
-            htmlContent: html.outerHTML?.substring(0, 200) + '...'
-        });
+
 
         // Only handle if target selector is enabled
         const targetSelectorEnabled = game.settings.get('bg3-inspired-hotbar', 'enableTargetSelector') ?? true;
-        console.log('BG3 Target Selector | Target selector enabled:', targetSelectorEnabled);
+
         if (!targetSelectorEnabled) return;
 
         // Check if this is an activity choice dialog

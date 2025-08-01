@@ -144,6 +144,11 @@ export class AutoPopulateCreateToken {
                 await this._populateContainerWithSettings(token.actor, tempManager, 2, container3Setting);
             }
 
+            // Auto-enable all passive features for NPCs
+            if (token.actor.type !== 'character') {
+                await this._autoEnablePassiveFeatures(token.actor);
+            }
+
             // Save the changes only if we still have permission
             if (token.actor.canUserModify(game.user, "update")) await tempManager.persist();
 
@@ -325,6 +330,35 @@ export class AutoPopulateCreateToken {
             }
         } catch (error) {
             console.error("BG3 Inspired Hotbar | Error auto-populating common actions token hotbar:", error);
+        }
+    }
+
+    /**
+     * Auto-enable all passive features for NPCs
+     * @param {Actor} actor - The actor to configure passive features for
+     */
+    static async _autoEnablePassiveFeatures(actor) {
+        if (!actor?.items) return;
+
+        try {
+            // Get all passive features (feats with no activities)
+            const passiveFeatures = actor.items
+                .filter(item => {
+                    return item.type === "feat" && 
+                           item.system.activities instanceof Map && 
+                           item.system.activities.size === 0;
+                })
+                .map(item => item.uuid);
+
+            // Only set the flag if there are passive features and none are currently selected
+            if (passiveFeatures.length > 0) {
+                const currentSelection = actor.getFlag(BG3CONFIG.MODULE_NAME, "selectedPassives");
+                if (!currentSelection || currentSelection.length === 0) {
+                    await actor.setFlag(BG3CONFIG.MODULE_NAME, "selectedPassives", passiveFeatures);
+                }
+            }
+        } catch (error) {
+            console.error("BG3 Inspired Hotbar | Error auto-enabling passive features:", error);
         }
     }
 }

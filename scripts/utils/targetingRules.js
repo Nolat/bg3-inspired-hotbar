@@ -236,12 +236,7 @@ function calculateRange(item) {
         rangeInSceneUnits = convertRangeUnits(rangeValue, range.units, gridUnits);
     }
     
-    // Debug logging
-    console.log(`BG3 Target Selector | Range calculation for ${item.name}:`, {
-        originalRange: `${rangeValue} ${range.units}`,
-        sceneUnits: gridUnits,
-        rangeInSceneUnits: rangeInSceneUnits
-    });
+
     
     return rangeInSceneUnits;
 }

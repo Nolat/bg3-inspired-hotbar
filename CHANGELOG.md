@@ -1,3 +1,8 @@
+## [3.3.1] - 2025-07-31
+### Fixed
+ - **Passive Features Auto-Populate** - NPCs should autopopulate their passive features when toekn is created. This function was lost in last update(s).
+ - **Annoying Console Log** - Oops. Forgot to remove it.
+
 ## [3.3.0] - 2025-07-30
 ### Important
 - **Foundry VTT v13 & D&D 5e v5.x Support** - This release officially supports Foundry VTT v13 and D&D 5e v5.0.4+. Updates for Foundry VTT v12 will cease with this release. Users on v12 can continue using v3.2.6 as the final v12-compatible release.
