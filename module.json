@@ -84,7 +84,7 @@
   "persistentStorage": true,
   "url": "https://github.com/Nolat/bg3-inspired-hotbar",
   "manifest": "https://github.com/Nolat/bg3-inspired-hotbar/releases/download/latest/module.json",
-  "download": "https://github.com/Nolat/bg3-inspired-hotbar/releases/download/latest/bg3-inspired-hotbar.zip",
+  "download": "https://github.com/Nolat/bg3-inspired-hotbar/releases/download/latest/module.zip",
   "readme": "README.md",
   "bugs": "https://github.com/Nolat/bg3-inspired-hotbar/issues",
   "packs": [
