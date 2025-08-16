@@ -149,11 +149,11 @@
             "Potions": "Mikstury",
             "Scrolls": "Zwoje",
             "Ammunition": "Amunicja",
-            "Food": "Żywność",
+            "Food": "Żywność i napoje",
             "Wands": "Różdżki",
             "Rods": "Berła",
             "Poisons": "Trucizny",
-            "Trinkets": "Błyskotki",
+            "Trinkets": "Drobiazgi",
             "Equipment": "Ekwipunek",
             "Tools": "Narzędzia",
             "Loot": "Zdobycz",
@@ -219,9 +219,43 @@
             "Name": "Pokaż wskaźniki zakresu",
             "Hint": "Wyświetlanie wizualnych wskaźników zasięgu podczas korzystania z selektora celów. Wyświetla okręgi wokół tokena, wskazując maksymalny zasięg zaklęć i zdolności."
         },
+        "RangeIndicatorShape": {
+            "Name": "Kształt wskaźnika zasięgu",
+            "Hint": "Wybierz kształt wskaźników zasięgu. Okrąg pokazuje tradycyjny okrągły zasięg, podczas gdy kwadrat pokazuje zasięg oparty na siatce D&D 5e, który lepiej pasuje do ruchu tokenów.",
+            "Choices": {
+                "Circle": "Kółko",
+                "Square": "Kwadrat"
+            }
+        },
+        "RangeIndicatorAnimation": {
+            "Name": "Animacja wskaźnika zasięgu",
+            "Hint": "Wybierz, czy wskaźniki zasięgu mają pulsować, aby przyciągnąć uwagę, czy pozostać statyczne. Pulsowanie sprawia, że są bardziej zauważalne, podczas gdy statyczne zapewniają czystszy wygląd.",
+            "Choices": {
+                "Pulse": "Puls",
+                "Static": "Statyczny"
+            }
+        },
+        "RangeIndicatorLineWidth": {
+            "Name": "Szerokość linii wskaźnika zasięgu",
+            "Hint": "Wybierz grubość linii wskaźnika zasięgu. Grubsze linie są bardziej widoczne, ale mogą być bardziej uciążliwe.",
+            "Choices": {
+                "Thin": "Cienka (1px)",
+                "Normal": "Normalna (2px)",
+                "Thick": "Gruba (3px)",
+                "ExtraThick": "Bardzo gruba (4px)"
+            }
+        },
+        "RangeIndicatorColor": {
+            "Name": "Kolor wskaźnika zasięgu",
+            "Hint": "Wybierz kolor wskaźników zasięgu. Wskaźnik będzie wyświetlany jako kontur w tym kolorze bez wypełnienia."
+        },
         "AutoTargetSelf": {
             "Name": "Automatyczne namierzanie siebie",
             "Hint": "Automatycznie celuj w siebie w przypadku zaklęć i zdolności, które mogą być skierowane tylko na rzucającego (np. samonaprowadzanie). Po włączeniu tej opcji, zaklęcia samonamierzające pomijają wybór celu."
+        },
+        "SkipSelectorWithValidTarget": {
+            "Name": "Pomiń selektor z prawidłowym celem",
+            "Hint": "W przypadku zaklęć/zdolności skierowanych na jeden cel pomiń wybór celu, jeśli prawidłowy cel został już wybrany."
         },
         "EnableRangeChecking": {
             "Name": "Włącz sprawdzanie zakresu",
@@ -298,6 +332,10 @@
             "Name": "Włącz automatyczne wyposażanie zestawów broni",
             "Hint": "Jeśli opcja jest zaznaczona, wybranie tokenu lub przełączenie między zestawami broni spowoduje automatyczne wyposażenie lub wyjęcie przedmiotów."
         },
+        "NpcUseContainerDefaults": {
+            "Name": "NPC używają domyślnych ustawień kontenera",
+            "Hint": "Jeśli opcja jest zaznaczona, postacie niezależne (powiązane lub niepowiązane) będą ignorować zestawy broni i zamiast tego używać domyślnych ustawień automatycznego wypełniania kontenerów."
+        },
         "HoverFilterShow": {
             "Name": "Filtr paska szybkiego dostępu po najechaniu kursorem",
             "Hint": "Jeśli opcja jest zaznaczona, filtr paska szybkiego dostępu będzie wyświetlany tylko po najechaniu na niego kursorem."
@@ -305,6 +343,12 @@
         "ShowExtendedFilter": {
             "Name": "Pokaż rozszerzone filtry",
             "Hint": "Jeśli zaznaczone, pokaż elementy o ograniczonym zastosowaniu jako filtr (bez podświetlenia/szarego tła)."
+        },
+        "Keybindings": {
+            "toggleUI": "Przełącz BG3 Hotbar",
+            "decreaseTargets": "Zmniejsz liczbę celów",
+            "increaseTargets": "Zwiększ liczbę celów",
+            "confirmTargets": "Potwierdź wybór celu"
         },
         "Menu": {
             "Global": {

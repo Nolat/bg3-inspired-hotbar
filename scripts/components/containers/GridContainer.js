@@ -2,6 +2,7 @@ import { AutoPopulateDialog } from "../../features/AutoPopulateContainer.js";
 import { AutoSort } from "../../features/AutoSort.js";
 import { BG3Component } from "../component.js";
 import { GridCell } from "./GridCell.js";
+import { ContainerPopover } from "./ContainerPopover.js";
 
 export class GridContainer extends BG3Component {
     constructor(data) {
@@ -26,10 +27,22 @@ export class GridContainer extends BG3Component {
                 await AutoSort.sortContainer(this);
                 break;
             case 'clear':
-                ui.BG3HOTBAR.manager.containers[this.id][this.index].items = {};
-                this.data.items = {};
-                await this.render();
-                await ui.BG3HOTBAR.manager.persist();
+                // Handle both regular containers and container popovers
+                if (this.id.startsWith('container_')) {
+                    // Container popover - save empty layout to parent item
+                    const popover = ContainerPopover.activePopover;
+                    if (popover) {
+                        this.data.items = {};
+                        await this.render();
+                        await popover.saveContainerLayout({});
+                    }
+                } else if (ui.BG3HOTBAR.manager.containers[this.id]) {
+                    // Regular containers
+                    ui.BG3HOTBAR.manager.containers[this.id][this.index].items = {};
+                    this.data.items = {};
+                    await this.render();
+                    await ui.BG3HOTBAR.manager.persist();
+                }
                 break;
             default:
                 break;

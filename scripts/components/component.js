@@ -48,9 +48,18 @@ export class BG3Component {
 
     async loadTemplate(data) {
         try {
-            const testTpl = await renderTemplate(this.template, data);
+            // Use the new Foundry v13+ API for renderTemplate
+            const renderFunc = foundry?.applications?.handlebars?.renderTemplate || renderTemplate;
+            const testTpl = await renderFunc(this.template, data);
             return testTpl;
         } catch (error) {
+            // Many container components work programmatically without templates
+            // This is expected behavior, so just return basic element without error spam
+            if (error.message?.includes('does not exist') || error.message?.includes('ENOENT')) {
+                // Component uses programmatic rendering - this is expected
+            } else {
+                console.error("BG3 Component | Unexpected template loading error:", error);
+            }
             return $(`<${this.elementType}>`).prop('outerHTML');
         }
     }

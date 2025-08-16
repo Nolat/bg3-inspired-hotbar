@@ -113,7 +113,7 @@ export class AutoPopulateCreateToken {
                 }
             }
 
-            if(token.actor.type !== 'character' && ((!token.actorLink && (game.settings.get(BG3CONFIG.MODULE_NAME, 'autoPopulateUnlinkedTokens') || force)) || (token.actorLink && (game.settings.get(BG3CONFIG.MODULE_NAME, 'autoPopulateLinkedTokens') || force)))) {
+            if((!token.actorLink && (game.settings.get(BG3CONFIG.MODULE_NAME, 'autoPopulateUnlinkedTokens') || force)) || (token.actorLink && (game.settings.get(BG3CONFIG.MODULE_NAME, 'autoPopulateLinkedTokens') || force))) {
                 // Get settings for each container
                 const container1Setting = game.settings.get(BG3CONFIG.MODULE_NAME, 'container1AutoPopulate');
                 const container2Setting = game.settings.get(BG3CONFIG.MODULE_NAME, 'container2AutoPopulate');
@@ -287,27 +287,37 @@ export class AutoPopulateCreateToken {
 
     static async _getCombatActionsList(actor) {
         let ids = [];
-        if(game.modules.get("chris-premades")?.active && game.packs.get("chris-premades.CPRActions")?.index?.size) {
-            const pack = game.packs.get("chris-premades.CPRActions"),
-                promises = [];
-            for(const id of game.settings.get(BG3CONFIG.MODULE_NAME, 'choosenCPRActions')) {
-                const item = actor.items.find(i => i.system.identifier === pack.index.get(id)?.system?.identifier);
-                if(item) ids.push(item.uuid);
-                else {
-                    const cprItem = pack.index.get(id);
-                    if(cprItem) {
-                        promises.push(new Promise(async (resolve, reject) => {
-                            let item = await pack.getDocument(cprItem._id);
-                            resolve(item);
-                        }))
-                    }
+        if (game.modules.get("chris-premades")?.active && game.packs.get("chris-premades.CPRActions")?.index?.size) {
+            const pack = game.packs.get("chris-premades.CPRActions");
+            const chosen = game.settings.get(BG3CONFIG.MODULE_NAME, 'choosenCPRActions') || [];
+            const toCreate = [];
+
+            for (const id of chosen) {
+                const idxEntry = pack.index.get(id);
+                if (!idxEntry) continue;
+
+                // Prefer robust match by system.identifier; fallback to case-insensitive name match
+                const targetIdentifier = idxEntry.system?.identifier;
+                const targetName = (idxEntry.name || '').toLowerCase();
+                const existing = actor.items.find((it) => {
+                    const sameIdentifier = targetIdentifier && it.system?.identifier === targetIdentifier;
+                    const sameName = targetName && (it.name || '').toLowerCase() === targetName;
+                    return sameIdentifier || sameName;
+                });
+
+                if (existing) {
+                    ids.push(existing.uuid);
+                    continue;
                 }
+
+                toCreate.push(idxEntry._id);
             }
-            if(promises.length) {
-                await Promise.all(promises).then(async (values) => {
-                    let tmpDoc = await actor.createEmbeddedDocuments('Item', values);
-                    ids = tmpDoc.map(i => i.uuid);
-                })
+
+            if (toCreate.length) {
+                const docs = await Promise.all(toCreate.map(async (_id) => pack.getDocument(_id)));
+                // Suppress hotbar auto-add during CPR common actions creation
+                const created = await actor.createEmbeddedDocuments('Item', docs, { noBG3AutoAdd: true });
+                ids = ids.concat(created.map((i) => i.uuid));
             }
         } else {
             const compendium = await game.packs.get("bg3-inspired-hotbar.bg3-inspired-hud");

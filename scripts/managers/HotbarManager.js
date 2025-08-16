@@ -70,7 +70,12 @@ export class HotbarManager {
 
         // For unlinked tokens, also remove the flag data
         if (token.actor && !token.actorLink) {
+            console.log(`BG3 Hotbar | cleanupTokenData: clearing saved containers for unlinked token "${token.name}" (actorId=${token.actor.id})`);
             await token.actor.unsetFlag(BG3CONFIG.MODULE_NAME, BG3CONFIG.CONTAINERS_NAME);
+            const after = token.actor.getFlag(BG3CONFIG.MODULE_NAME, BG3CONFIG.CONTAINERS_NAME);
+            console.log(`BG3 Hotbar | cleanupTokenData: flag after clear =`, after);
+        } else {
+            console.log(`BG3 Hotbar | cleanupTokenData: skipped (actorLink=${token.actorLink}) for token "${token.name}"`);
         }
     }
 

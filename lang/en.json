@@ -245,9 +245,17 @@
                 "ExtraThick": "Extra Thick (4px)"
             }
         },
+        "RangeIndicatorColor": {
+            "Name": "Range Indicator Color",
+            "Hint": "Choose the color of range indicators. The indicator will show as an outline in this color with no fill."
+        },
         "AutoTargetSelf": {
             "Name": "Auto-Target Self",
             "Hint": "Automatically target yourself for spells and abilities that can only target the caster (like self-buffs). When enabled, self-targeting spells will skip the target selector."
+        },
+        "SkipSelectorWithValidTarget": {
+            "Name": "Skip Selector with Valid Target",
+            "Hint": "For single-target spells/abilities, skip the target selector if a valid target is already selected."
         },
         "EnableRangeChecking": {
             "Name": "Enable Range Checking",
@@ -339,7 +347,8 @@
         "Keybindings": {
             "toggleUI": "Toggle BG3 Hotbar",
             "decreaseTargets": "Decrease Target Count",
-            "increaseTargets": "Increase Target Count"
+            "increaseTargets": "Increase Target Count",
+            "confirmTargets": "Confirm Target Selection"
         },
         "Menu": {
             "Global": {

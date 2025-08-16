@@ -22,8 +22,8 @@ export const BG3CONFIG = {
         hotbar: {
             count: 3,
             config: {
-                get cols() { return BG3CONFIG.INITIAL_COLS},
-                get rows() { return BG3CONFIG.ROWS},
+                get cols() { return BG3CONFIG.INITIAL_COLS },
+                get rows() { return BG3CONFIG.ROWS },
                 items: {}
             }
         },
@@ -54,7 +54,7 @@ export const BG3CONFIG = {
             }
         }
     },
-    
+
     // Z-Index Layers
     Z_INDEX: {
         BACKGROUND: {
@@ -83,14 +83,14 @@ export const BG3CONFIG = {
         },
         BASE: 70
     },
-    
+
     // State Management
     FLAG_NAME: "hotbarConfig",
     CONTAINERS_NAME: "containersConfig",
     MODULE_NAME: "bg3-inspired-hotbar",
     // PATHs
-    get COMPONENTS_PATH() { return `modules/${BG3CONFIG.MODULE_NAME}/templates/components/`},
-    
+    get COMPONENTS_PATH() { return `modules/${BG3CONFIG.MODULE_NAME}/templates/components/` },
+
     // Styling
     COLORS: {
         ACTION: "#2ecc71",     // vibrant green
@@ -124,12 +124,12 @@ export const BG3CONFIG = {
     },
 
     EXTRAINFOS: [
-        {attr: 'attributes.ac.value', icon: 'fas fa-shield', color: '#5abef5', pos: 'Top Left'},
-        {attr: 'attributes.spell.dc', icon: 'fas fa-book-open', color: '#af68d5', pos: 'Top Right'},
-        {attr: '', icon: '', color: '', pos: 'Left'},
-        {attr: '', icon: '', color: '', pos: 'Right'},
-        {attr: '', icon: '', color: '', pos: 'Bottom Left'},
-        {attr: '', icon: '', color: '', pos: 'Bottom Right'}
+        { attr: 'attributes.ac.value', icon: 'fas fa-shield', color: '#5abef5', pos: 'Top Left' },
+        { attr: 'attributes.spell.dc', icon: 'fas fa-book-open', color: '#af68d5', pos: 'Top Right' },
+        { attr: '', icon: '', color: '', pos: 'Left' },
+        { attr: '', icon: '', color: '', pos: 'Right' },
+        { attr: '', icon: '', color: '', pos: 'Bottom Left' },
+        { attr: '', icon: '', color: '', pos: 'Bottom Right' }
     ],
 
     // Themes
@@ -254,26 +254,42 @@ export function registerKeybinding() {
         restricted: false,
         precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL
     });
+
+    // Register keybinding for confirming target selection
+    game.keybindings.register(BG3CONFIG.MODULE_NAME, "confirmTargets", {
+        name: "BG3.Settings.Keybindings.confirmTargets",
+        hint: "Confirms the current target selection and proceeds with the spell/ability",
+        editable: [{ key: "Enter" }],
+        onDown: () => {
+            // Only trigger if target selector is active
+            const activeTargetSelector = window.activeTargetSelector;
+            if (activeTargetSelector && activeTargetSelector.isActive) {
+                activeTargetSelector.confirmSelection();
+            }
+        },
+        restricted: false,
+        precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL
+    });
 }
 
 export function registerLibWrapper() {
-    patchFunc("game.dnd5e.dataModels.ItemDataModel.prototype.getCardData", async function (wrapped, { activity, ...enrichmentOptions }={}) {
-        const context = await wrapped.call(this, {activity, ...enrichmentOptions});
-        if(context.labels?.damages?.length) {
+    patchFunc("game.dnd5e.dataModels.ItemDataModel.prototype.getCardData", async function (wrapped, { activity, ...enrichmentOptions } = {}) {
+        const context = await wrapped.call(this, { activity, ...enrichmentOptions });
+        if (context.labels?.damages?.length) {
             let textDamage = '';
             const rollData = (activity ?? this.parent).getRollData();
-            for(let i = 0; i < context.labels.damages.length; i++) {
+            for (let i = 0; i < context.labels.damages.length; i++) {
                 // [[/damage {{damage.formula}}{{#if damage.damageType}} type={{damage.damageType}}{{/if}}]]
                 textDamage += `[[/damage ${context.labels.damages[i].formula}${context.labels.damages[i].damageType ? ` type=${context.labels.damages[i].damageType}` : ''}]]`;
-                if(i < context.labels.damages.length - 1) textDamage += ' | ';
+                if (i < context.labels.damages.length - 1) textDamage += ' | ';
             }
             context.enrichDamage = {
                 value: await TextEditor.enrichHTML(textDamage ?? "", {
-                  rollData, relativeTo: this.parent, ...enrichmentOptions
+                    rollData, relativeTo: this.parent, ...enrichmentOptions
                 })
             }
         }
-        if(!this.hasOwnProperty('identified') && this.hasLimitedUses) context.uses = this.uses;
+        if (!this.hasOwnProperty('identified') && this.hasLimitedUses) context.uses = this.uses;
         return context;
     }, "MIXED");
 }
@@ -286,11 +302,11 @@ export async function preloadHandlebarsTemplates() {
     ];
 
     const paths = {};
-    for ( const path of partials ) {
+    for (const path of partials) {
         paths[path.replace(".hbs", ".html")] = path;
         paths[`bg3hotbar.${path.split("/").pop().replace(".hbs", "")}`] = path;
     }
-    
+
     return loadTemplates(paths);
 }
 
@@ -325,14 +341,14 @@ class colorPickerInput2 extends HTMLInputElement {
     _makePicker(pickerClass) {
         /** @type {import('vanilla-picker').default} */
         this.picker = new Picker();
-        
+
         // check if an actual value
         if (this.value != undefined && this.value.length != 0 && this.value.startsWith("#") && this.value.match(/[^A-Fa-f0-9#]+/g) == null) {
             this.picker.setColor(this.value.padEnd(9, "f").slice(0, 9), true);
-        } else if(this.getAttribute("placeholder") != undefined && this.getAttribute("placeholder").length != 0 && this.getAttribute("placeholder").startsWith("#") && this.getAttribute("placeholder").match(/[^A-Fa-f0-9#]+/g) == null) {
+        } else if (this.getAttribute("placeholder") != undefined && this.getAttribute("placeholder").length != 0 && this.getAttribute("placeholder").startsWith("#") && this.getAttribute("placeholder").match(/[^A-Fa-f0-9#]+/g) == null) {
             this.picker.setColor(this.getAttribute("placeholder").padEnd(9, "f").slice(0, 9), true);
         }
-        
+
         this.picker.setOptions({
             popup: true,
             parent: this.parentElement,
@@ -345,7 +361,7 @@ class colorPickerInput2 extends HTMLInputElement {
                     color.hex,
                     this
                 );
-                this.dispatchEvent(new CustomEvent("pickerDone", {detail: color}), {bubbles: true });
+                this.dispatchEvent(new CustomEvent("pickerDone", { detail: color }), { bubbles: true });
             },
             onChange: (color) => {
                 if (this.dataset.responsiveColor !== undefined) {
@@ -374,11 +390,11 @@ export function registerEarly() {
         type: Boolean,
         default: true
     });
-    
+
     Hooks.on('getSceneControlButtons', (controls) => {
         const tokenTools = controls.tokens ?? controls.find(c => c.name === "token");
         if (!tokenTools) return;
-    
+
         const isActive = game.settings.get(BG3CONFIG.MODULE_NAME, 'uiEnabled') ?? true,
             btnData = {
                 name: "toggleBG3UI",
@@ -389,15 +405,15 @@ export function registerEarly() {
                 onClick: value => ui.BG3HOTBAR.toggle(value),
                 order: 10
             };
-        
 
-        if(Array.isArray(tokenTools.tools)) tokenTools.tools.push(btnData);
+
+        if (Array.isArray(tokenTools.tools)) tokenTools.tools.push(btnData);
         else tokenTools.tools.toggleBG3UI = btnData;
     });
-    
+
     const rollEvents = ["dnd5e.preRollAttackV2", "dnd5e.preRollSavingThrowV2", "dnd5e.preRollSkillV2", "dnd5e.preRollAbilityCheckV2", "dnd5e.preRollConcentrationV2", "dnd5e.preRollDeathSaveV2", "dnd5e.preRollToolV2"];
-    for(const event of rollEvents) Hooks.on(event, hookRollEvent);
-    
+    for (const event of rollEvents) Hooks.on(event, hookRollEvent);
+
     if (customElements.get('colorpicker-input2') != undefined) {
         return;
     }
@@ -407,35 +423,35 @@ export function registerEarly() {
 }
 
 const hookRollEvent = (rollConfig, dialogConfig, messageConfig) => {
-    if(!game.modules.get("midi-qol")?.active || !game.settings.get(BG3CONFIG.MODULE_NAME, 'addAdvBtnsMidiQoL') || !ui.BG3HOTBAR.manager?.actor || ui.BG3HOTBAR.manager?.actor !== rollConfig.workflow?.actor) return;
+    if (!game.modules.get("midi-qol")?.active || !game.settings.get(BG3CONFIG.MODULE_NAME, 'addAdvBtnsMidiQoL') || !ui.BG3HOTBAR.manager?.actor || ui.BG3HOTBAR.manager?.actor !== rollConfig.workflow?.actor) return;
     const state = ui.BG3HOTBAR.manager.actor.getFlag(BG3CONFIG.MODULE_NAME, "advState"),
         once = ui.BG3HOTBAR.manager.actor.getFlag(BG3CONFIG.MODULE_NAME, "advOnce");
-    if(state !== undefined) {
-        if(state === 'advBtn') rollConfig.advantage = true;
-        else if(state === 'disBtn') rollConfig.disadvantage = true;
-        if(once && !!ui.BG3HOTBAR.components.advantage) ui.BG3HOTBAR.components.advantage.setState(null);
+    if (state !== undefined) {
+        if (state === 'advBtn') rollConfig.advantage = true;
+        else if (state === 'disBtn') rollConfig.disadvantage = true;
+        if (once && !!ui.BG3HOTBAR.components.advantage) ui.BG3HOTBAR.components.advantage.setState(null);
     }
 }
 
 const formatSettingsDetails = (data) => {
     const bg3Tab = $('section[data-tab="bg3-inspired-hotbar"]').eq(0);
-    if(!bg3Tab) return;
-    for(const detail of data) {
+    if (!bg3Tab) return;
+    for (const detail of data) {
         let toShow = false;
         const generalDetails = $('<details>'),
             contentDetails = $('<div>');
         generalDetails.append($('<summary>').html(game.i18n.localize(detail.label))).append(contentDetails);
-        for(const category of detail.categories) {
-            if(category.label) contentDetails.append($('<div>').addClass('form-group group-header').html(game.i18n.localize(category.label)));
-            for(const field of category.fields) {
+        for (const category of detail.categories) {
+            if (category.label) contentDetails.append($('<div>').addClass('form-group group-header').html(game.i18n.localize(category.label)));
+            for (const field of category.fields) {
                 const fieldName = `${BG3CONFIG.MODULE_NAME}.${field}`,
                     childContainer = $(`[name="${fieldName}"]`).length ? $(`[name="${fieldName}"]`) : $(`button[data-key="${fieldName}"]`);
-                if(childContainer.length) toShow = true;
+                if (childContainer.length) toShow = true;
                 else continue;
                 contentDetails.append(childContainer.parents('div.form-group:first'));
             }
         }
-        if(toShow) bg3Tab.append(generalDetails);
+        if (toShow) bg3Tab.append(generalDetails);
     }
 }
 
@@ -512,7 +528,7 @@ export function updateSettingsDisplay() {
                 categories: [
                     {
                         label: null,
-                        fields: ['enableTargetSelector', 'enableRangeChecking', 'showRangeIndicators', 'rangeIndicatorShape', 'rangeIndicatorAnimation', 'rangeIndicatorLineWidth', 'autoTargetSelf']
+                        fields: ['enableTargetSelector', 'enableRangeChecking', 'showRangeIndicators', 'rangeIndicatorShape', 'rangeIndicatorAnimation', 'rangeIndicatorLineWidth', 'rangeIndicatorColor', 'autoTargetSelf', 'skipSelectorWithValidTarget']
                     }
                 ]
             },
@@ -595,9 +611,9 @@ export function registerSettings() {
             document.body.dataset.playerList = value;
         }
     });
-    
+
     // Visual Settings - Appearance
-    
+
     game.settings.register(BG3CONFIG.MODULE_NAME, 'underPause', {
         name: 'BG3.Settings.GamePause.Name',
         hint: 'BG3.Settings.GamePause.Hint',
@@ -606,10 +622,10 @@ export function registerSettings() {
         type: Boolean,
         default: false,
         onChange: value => {
-            if(ui.BG3HOTBAR.element?.[0]) ui.BG3HOTBAR.element?.[0].setAttribute('data-under-pause', value);
+            if (ui.BG3HOTBAR.element?.[0]) ui.BG3HOTBAR.element?.[0].setAttribute('data-under-pause', value);
         }
     });
-    
+
     game.settings.register(BG3CONFIG.MODULE_NAME, 'autoScale', {
         name: 'BG3.Settings.AutoScale.Name',
         hint: 'BG3.Settings.AutoScale.Hint',
@@ -618,7 +634,7 @@ export function registerSettings() {
         type: Boolean,
         default: true,
         onChange: () => {
-            if(ui.BG3HOTBAR.element[0]) ui.BG3HOTBAR.element[0].style.setProperty('--bg3-scale-ui', ui.BG3HOTBAR.updateUIScale());
+            if (ui.BG3HOTBAR.element[0]) ui.BG3HOTBAR.element[0].style.setProperty('--bg3-scale-ui', ui.BG3HOTBAR.updateUIScale());
         }
     });
 
@@ -635,7 +651,7 @@ export function registerSettings() {
         },
         default: 100,
         onChange: () => {
-            if(ui.BG3HOTBAR.element[0]) ui.BG3HOTBAR.element[0].style.setProperty('--bg3-scale-ui', ui.BG3HOTBAR.updateUIScale());
+            if (ui.BG3HOTBAR.element[0]) ui.BG3HOTBAR.element[0].style.setProperty('--bg3-scale-ui', ui.BG3HOTBAR.updateUIScale());
         }
     });
 
@@ -652,10 +668,10 @@ export function registerSettings() {
         },
         default: 'center',
         onChange: value => {
-           if(ui.BG3HOTBAR.element[0]) ui.BG3HOTBAR.element[0].dataset.position = value;
+            if (ui.BG3HOTBAR.element[0]) ui.BG3HOTBAR.element[0].dataset.position = value;
         }
     });
-     
+
     game.settings.register(BG3CONFIG.MODULE_NAME, "posPadding", {
         name: "UI Position - Padding",
         hint: "Space from the screen border. From the left if UI Position -> Left, From the right if UI Position -> Right",
@@ -664,10 +680,10 @@ export function registerSettings() {
         type: Number,
         default: 0,
         onChange: value => {
-            if(ui.BG3HOTBAR.element[0]) ui.BG3HOTBAR.element[0].style.setProperty('--position-padding', `${value}px`);
+            if (ui.BG3HOTBAR.element[0]) ui.BG3HOTBAR.element[0].style.setProperty('--position-padding', `${value}px`);
         },
     });
-     
+
     game.settings.register(BG3CONFIG.MODULE_NAME, "posPaddingBottom", {
         name: "UI Position - Bottom",
         hint: "Space from the bottom of the screen.",
@@ -676,7 +692,7 @@ export function registerSettings() {
         type: Number,
         default: 10,
         onChange: value => {
-            if(ui.BG3HOTBAR.element[0]) ui.BG3HOTBAR.element[0].style.setProperty('--position-bottom', `${value}px`);
+            if (ui.BG3HOTBAR.element[0]) ui.BG3HOTBAR.element[0].style.setProperty('--position-bottom', `${value}px`);
         },
     });
 
@@ -693,7 +709,7 @@ export function registerSettings() {
         },
         default: 1.0,
         onChange: value => {
-            if(ui.BG3HOTBAR.element?.[0]) ui.BG3HOTBAR.element?.[0].style.setProperty('--bg3-normal-opacity', value);
+            if (ui.BG3HOTBAR.element?.[0]) ui.BG3HOTBAR.element?.[0].style.setProperty('--bg3-normal-opacity', value);
         }
     });
 
@@ -710,8 +726,8 @@ export function registerSettings() {
         },
         default: 1,
         onChange: value => {
-            if(ui.BG3HOTBAR.element?.[0]) {
-                if(value === 1) {
+            if (ui.BG3HOTBAR.element?.[0]) {
+                if (value === 1) {
                     ui.BG3HOTBAR.element?.[0].style.setProperty('--bg3-faded-delay', `0s`);
                     ui.BG3HOTBAR.element?.[0].style.removeProperty('--bg3-faded-opacity');
                 }
@@ -737,25 +753,25 @@ export function registerSettings() {
         default: 5,
         onChange: value => {
             // Update the UI fade delay when the setting changes
-            if(ui.BG3HOTBAR.element?.[0] && game.settings.get(BG3CONFIG.MODULE_NAME, 'fadedOpacity') !== 1) ui.BG3HOTBAR.element?.[0].style.setProperty('--bg3-faded-delay', `${value}s`);
+            if (ui.BG3HOTBAR.element?.[0] && game.settings.get(BG3CONFIG.MODULE_NAME, 'fadedOpacity') !== 1) ui.BG3HOTBAR.element?.[0].style.setProperty('--bg3-faded-delay', `${value}s`);
         }
     });
-  
+
     game.settings.register(BG3CONFIG.MODULE_NAME, 'autoHideCombat', {
-      name: 'Auto Hide UI',
-      // hint: 'Display a extra container to for basic actions like dodge, dash, etc (Compatible with CPR)',
-      scope: 'client',
-      config: true,
-      type: String,
-      default: false,
-      choices: {
-          'false': 'Never',
-          'true': 'When not in combat',
-          'init': 'When not in combat and it\'s not your turn'
-      },
-      onChange: () => {
-        ui.BG3HOTBAR._onUpdateCombat(true);
-      }
+        name: 'Auto Hide UI',
+        // hint: 'Display a extra container to for basic actions like dodge, dash, etc (Compatible with CPR)',
+        scope: 'client',
+        config: true,
+        type: String,
+        default: false,
+        choices: {
+            'false': 'Never',
+            'true': 'When not in combat',
+            'init': 'When not in combat and it\'s not your turn'
+        },
+        onChange: () => {
+            ui.BG3HOTBAR._onUpdateCombat(true);
+        }
     });
 
     // Theme settings
@@ -779,7 +795,7 @@ export function registerSettings() {
         type: ThemeSettingDialog,
         restricted: !scopeTheme
     });
-    
+
     game.settings.register(BG3CONFIG.MODULE_NAME, 'themeOption', {
         name: 'Theme options',
         hint: 'Choose between available themes',
@@ -807,52 +823,52 @@ export function registerSettings() {
         type: Boolean,
         default: false,
         onChange: value => {
-          if(ui.BG3HOTBAR.components.portrait?.element) {
-            ui.BG3HOTBAR.components.portrait.element.classList.toggle('portrait-hidden', value);
-          }
+            if (ui.BG3HOTBAR.components.portrait?.element) {
+                ui.BG3HOTBAR.components.portrait.element.classList.toggle('portrait-hidden', value);
+            }
         }
     });
 
     game.settings.register(BG3CONFIG.MODULE_NAME, 'showHealthOverlay', {
-      name: 'Show health overlay on character portrait.',
-      // hint: 'Display a extra container to for basic actions like dodge, dash, etc (Compatible with CPR)',
-      scope: 'client',
-      config: true,
-      type: Boolean,
-      default: true,
-      onChange: () => {
-        if(ui.BG3HOTBAR.components.portrait) {
-            ui.BG3HOTBAR.components.portrait.togglePortraitOverlay.bind(ui.BG3HOTBAR.components.portrait)();
+        name: 'Show health overlay on character portrait.',
+        // hint: 'Display a extra container to for basic actions like dodge, dash, etc (Compatible with CPR)',
+        scope: 'client',
+        config: true,
+        type: Boolean,
+        default: true,
+        onChange: () => {
+            if (ui.BG3HOTBAR.components.portrait) {
+                ui.BG3HOTBAR.components.portrait.togglePortraitOverlay.bind(ui.BG3HOTBAR.components.portrait)();
+            }
         }
-      }
     });
 
     game.settings.register(BG3CONFIG.MODULE_NAME, 'showHPText', {
-      name: 'Show HP text on character portrait.',
-      // hint: 'Display a extra container to for basic actions like dodge, dash, etc (Compatible with CPR)',
-      scope: 'client',
-      config: true,
-      type: Boolean,
-      default: true,
-      onChange: () => {
-        if(ui.BG3HOTBAR.components.portrait?.components?.healthContainer) {
-            ui.BG3HOTBAR.components.portrait.components.healthContainer.render();
+        name: 'Show HP text on character portrait.',
+        // hint: 'Display a extra container to for basic actions like dodge, dash, etc (Compatible with CPR)',
+        scope: 'client',
+        config: true,
+        type: Boolean,
+        default: true,
+        onChange: () => {
+            if (ui.BG3HOTBAR.components.portrait?.components?.healthContainer) {
+                ui.BG3HOTBAR.components.portrait.components.healthContainer.render();
+            }
         }
-      }
     });
 
     game.settings.register(BG3CONFIG.MODULE_NAME, 'enableHPControls', {
-      name: 'BG3.Settings.EnableHPControls.Name',
-      hint: 'BG3.Settings.EnableHPControls.Hint',
-      scope: 'world',
-      config: true,
-      type: Boolean,
-      default: false,
-      onChange: () => {
-        if(ui.BG3HOTBAR.components.portrait?.components?.healthContainer) {
-            ui.BG3HOTBAR.components.portrait.components.healthContainer.render();
+        name: 'BG3.Settings.EnableHPControls.Name',
+        hint: 'BG3.Settings.EnableHPControls.Hint',
+        scope: 'world',
+        config: true,
+        type: Boolean,
+        default: false,
+        onChange: () => {
+            if (ui.BG3HOTBAR.components.portrait?.components?.healthContainer) {
+                ui.BG3HOTBAR.components.portrait.components.healthContainer.render();
+            }
         }
-      }
     });
 
     game.settings.register(BG3CONFIG.MODULE_NAME, 'showDeathSavingThrow', {
@@ -868,7 +884,7 @@ export function registerSettings() {
         },
         default: 'show',
         onChange: async value => {
-            if(ui.BG3HOTBAR.components.portrait?.components?.deathSavesContainer) {
+            if (ui.BG3HOTBAR.components.portrait?.components?.deathSavesContainer) {
                 await ui.BG3HOTBAR.components.portrait.components.deathSavesContainer.render();
                 ui.BG3HOTBAR.components.portrait.components.deathSavesContainer.element.classList.toggle('death-only-skull', value === 'only');
             }
@@ -876,19 +892,19 @@ export function registerSettings() {
     });
 
     game.settings.register(BG3CONFIG.MODULE_NAME, 'showExtraInfo', {
-      name: 'Show extra datas on character portrait.',
-      // hint: 'Display a extra container to for basic actions like dodge, dash, etc (Compatible with CPR)',
-      scope: 'client',
-      config: true,
-      type: Boolean,
-      default: false,
-      onChange: () => {
-        if(ui.BG3HOTBAR.components.portrait) {
-            ui.BG3HOTBAR.components.portrait.toggleExtraInfos.bind(ui.BG3HOTBAR.components.portrait)();
+        name: 'Show extra datas on character portrait.',
+        // hint: 'Display a extra container to for basic actions like dodge, dash, etc (Compatible with CPR)',
+        scope: 'client',
+        config: true,
+        type: Boolean,
+        default: false,
+        onChange: () => {
+            if (ui.BG3HOTBAR.components.portrait) {
+                ui.BG3HOTBAR.components.portrait.toggleExtraInfos.bind(ui.BG3HOTBAR.components.portrait)();
+            }
         }
-      }
     });
-    
+
     game.settings.register(BG3CONFIG.MODULE_NAME, "dataExtraInfo", {
         scope: "client",
         config: false,
@@ -909,7 +925,7 @@ export function registerSettings() {
         type: ExtraInfosDialog,
         scope: 'client'
     });
-    
+
     game.settings.register(BG3CONFIG.MODULE_NAME, 'defaultPortraitPreferences', {
         name: 'BG3.Settings.DefaultPortraitPreferences.Name',
         hint: 'BG3.Settings.DefaultPortraitPreferences.Hint',
@@ -1081,7 +1097,7 @@ export function registerSettings() {
         type: Boolean,
         default: true,
         onChange: value => {
-            if(ui.BG3HOTBAR.components.weapon?.components.combat[0]?.element) ui.BG3HOTBAR.components.weapon.components.combat[0].element.classList.toggle('hidden', !value);
+            if (ui.BG3HOTBAR.components.weapon?.components.combat[0]?.element) ui.BG3HOTBAR.components.weapon.components.combat[0].element.classList.toggle('hidden', !value);
         }
     });
 
@@ -1094,7 +1110,7 @@ export function registerSettings() {
         default: true
     });
 
-    if(game.modules.get("chris-premades")?.active) {
+    if (game.modules.get("chris-premades")?.active) {
         game.settings.registerMenu(BG3CONFIG.MODULE_NAME, "chooseCPRActions", {
             name: 'BG3.Settings.Menu.CPR.Name',
             label: 'BG3.Settings.Menu.CPR.Label',
@@ -1123,7 +1139,7 @@ export function registerSettings() {
         type: Boolean,
         default: true,
         onChange: value => {
-            if(ui.BG3HOTBAR.components.weapon?.components.combat[0]?.element) ui.BG3HOTBAR.components.weapon.components.combat[0].locked = value;
+            if (ui.BG3HOTBAR.components.weapon?.components.combat[0]?.element) ui.BG3HOTBAR.components.weapon.components.combat[0].locked = value;
         }
     });
 
@@ -1136,7 +1152,7 @@ export function registerSettings() {
         default: false,
         onChange: value => {
             const ctrlElem = document.querySelector('.bg3-control-container');
-            if(ctrlElem) ctrlElem.classList.toggle('fade', value);
+            if (ctrlElem) ctrlElem.classList.toggle('fade', value);
         }
     });
 
@@ -1163,25 +1179,25 @@ export function registerSettings() {
     game.settings.register(BG3CONFIG.MODULE_NAME, 'enableTargetSelector', {
         name: 'BG3.Settings.EnableTargetSelector.Name',
         hint: 'BG3.Settings.EnableTargetSelector.Hint',
-        scope: 'client',
+        scope: 'world',
         config: true,
         type: Boolean,
-        default: true
+        default: false
     });
 
     game.settings.register(BG3CONFIG.MODULE_NAME, 'showRangeIndicators', {
         name: 'BG3.Settings.ShowRangeIndicators.Name',
         hint: 'BG3.Settings.ShowRangeIndicators.Hint',
-        scope: 'client',
+        scope: 'world',
         config: true,
         type: Boolean,
-        default: true
+        default: false
     });
 
     game.settings.register(BG3CONFIG.MODULE_NAME, 'rangeIndicatorShape', {
         name: 'BG3.Settings.RangeIndicatorShape.Name',
         hint: 'BG3.Settings.RangeIndicatorShape.Hint',
-        scope: 'client',
+        scope: 'world',
         config: true,
         type: String,
         choices: {
@@ -1194,7 +1210,7 @@ export function registerSettings() {
     game.settings.register(BG3CONFIG.MODULE_NAME, 'rangeIndicatorAnimation', {
         name: 'BG3.Settings.RangeIndicatorAnimation.Name',
         hint: 'BG3.Settings.RangeIndicatorAnimation.Hint',
-        scope: 'client',
+        scope: 'world',
         config: true,
         type: String,
         choices: {
@@ -1207,7 +1223,7 @@ export function registerSettings() {
     game.settings.register(BG3CONFIG.MODULE_NAME, 'rangeIndicatorLineWidth', {
         name: 'BG3.Settings.RangeIndicatorLineWidth.Name',
         hint: 'BG3.Settings.RangeIndicatorLineWidth.Hint',
-        scope: 'client',
+        scope: 'world',
         config: true,
         type: Number,
         choices: {
@@ -1219,10 +1235,28 @@ export function registerSettings() {
         default: 2
     });
 
+    game.settings.register(BG3CONFIG.MODULE_NAME, 'rangeIndicatorColor', {
+        name: 'BG3.Settings.RangeIndicatorColor.Name',
+        hint: 'BG3.Settings.RangeIndicatorColor.Hint',
+        scope: 'world',
+        config: true,
+        type: String,
+        default: '#00ff00'
+    });
+
     game.settings.register(BG3CONFIG.MODULE_NAME, 'autoTargetSelf', {
         name: 'BG3.Settings.AutoTargetSelf.Name',
         hint: 'BG3.Settings.AutoTargetSelf.Hint',
-        scope: 'client',
+        scope: 'world',
+        config: true,
+        type: Boolean,
+        default: false
+    });
+
+    game.settings.register(BG3CONFIG.MODULE_NAME, 'skipSelectorWithValidTarget', {
+        name: 'BG3.Settings.SkipSelectorWithValidTarget.Name',
+        hint: 'BG3.Settings.SkipSelectorWithValidTarget.Hint',
+        scope: 'world',
         config: true,
         type: Boolean,
         default: true
@@ -1231,10 +1265,10 @@ export function registerSettings() {
     game.settings.register(BG3CONFIG.MODULE_NAME, 'enableRangeChecking', {
         name: 'BG3.Settings.EnableRangeChecking.Name',
         hint: 'BG3.Settings.EnableRangeChecking.Hint',
-        scope: 'client',
+        scope: 'world',
         config: true,
         type: Boolean,
-        default: true
+        default: false
     });
 
     game.settings.register(BG3CONFIG.MODULE_NAME, 'enableGMHotbar', {
@@ -1250,7 +1284,7 @@ export function registerSettings() {
             }
         }
     });
-    
+
     game.settings.register(BG3CONFIG.MODULE_NAME, 'gmHotbarData', {
         name: 'BG3.Settings.EnableGMHotbar.Name',
         hint: 'BG3.Settings.EnableGMHotbar.Hint',
@@ -1260,7 +1294,7 @@ export function registerSettings() {
         type: Object,
         default: null
     });
-    
+
     game.settings.register(BG3CONFIG.MODULE_NAME, 'gmHotbarInit', {
         scope: 'world',
         config: false,
@@ -1429,7 +1463,7 @@ export function registerSettings() {
         type: Boolean,
         default: false,
         onChange: value => {
-            if(value === true) ui.BG3HOTBAR.tooltipManager._tooltipRangeDamage();
+            if (value === true) ui.BG3HOTBAR.tooltipManager._tooltipRangeDamage();
             else ui.BG3HOTBAR.tooltipManager._resetEnrichers(['damage']);
         }
     });
@@ -1443,7 +1477,7 @@ export function registerSettings() {
         type: Boolean,
         default: false,
         onChange: () => {
-            if(ui.BG3HOTBAR.components?.container?.components?.filterContainer) ui.BG3HOTBAR.components.container.components.filterContainer._checkBonusReactionUsed();
+            if (ui.BG3HOTBAR.components?.container?.components?.filterContainer) ui.BG3HOTBAR.components.container.components.filterContainer._checkBonusReactionUsed();
         }
     });
 
@@ -1455,8 +1489,8 @@ export function registerSettings() {
         type: Boolean,
         default: false,
         onChange: value => {
-            if(ui.BG3HOTBAR.components?.advantage) {
-                if(value) ui.BG3HOTBAR.components.advantage._renderInner();
+            if (ui.BG3HOTBAR.components?.advantage) {
+                if (value) ui.BG3HOTBAR.components.advantage._renderInner();
                 else ui.BG3HOTBAR.components.advantage.destroy();
             }
         }
@@ -1483,7 +1517,7 @@ export function registerSettings() {
             dragDrop: false
         }
     });
-    
+
     game.settings.register(BG3CONFIG.MODULE_NAME, 'masterLockEnabled', {
         name: 'Master Lock State',
         hint: 'Whether the master lock is enabled',
@@ -1492,18 +1526,18 @@ export function registerSettings() {
         type: Boolean,
         default: false
     });
-    
+
     // Make sure settings are registered before hooks that might need them
-    console.log(`${BG3CONFIG.MODULE_NAME} | Settings Registered`);
     
+
     // Migrate existing "consumable" settings to new subtype format (async)
     _migrateConsumableSettings();
 }
 
 export function registerHandlebars() {
-    Handlebars.registerHelper('rangedmg', async function(formula, type) {
+    Handlebars.registerHelper('rangedmg', async function (formula, type) {
         let textContent = formula;
-        if(game.settings.get(BG3CONFIG.MODULE_NAME, 'showDamageRanges')) {
+        if (game.settings.get(BG3CONFIG.MODULE_NAME, 'showDamageRanges')) {
             const minRoll = Roll.create(formula).evaluate({ minimize: true }),
                 maxRoll = Roll.create(formula).evaluate({ maximize: true });
             textContent = `${Math.floor((await minRoll).total)}-${Math.ceil((await maxRoll).total)}`;
@@ -1511,9 +1545,9 @@ export function registerHandlebars() {
         return `${textContent}${type && type !== '' ? ` ${type}` : ''}`;
     });
 
-    Handlebars.registerHelper('times', function(n, block) {
+    Handlebars.registerHelper('times', function (n, block) {
         var accum = '';
-        for(var i = 0; i < n; ++i) {
+        for (var i = 0; i < n; ++i) {
             block.data.index = i;
             block.data.first = i === 0;
             block.data.last = i === (n - 1);
@@ -1522,7 +1556,7 @@ export function registerHandlebars() {
         return accum;
     });
 
-    Handlebars.registerHelper('math', function(lvalue, operator, rvalue) {
+    Handlebars.registerHelper('math', function (lvalue, operator, rvalue) {
         lvalue = parseFloat(lvalue);
         rvalue = parseFloat(rvalue);
         return {
@@ -1539,20 +1573,20 @@ export function registerHandlebars() {
         {{#case 'b'}} B {{/case}} 
         {{#default '188'}} {{/default}}
     {{/switch}} */
-    Handlebars.registerHelper('switch', function(value, options) {
+    Handlebars.registerHelper('switch', function (value, options) {
         this.switch_value = value;
         this.switch_break = false;
         return options.fn(this);
     });
-        
-    Handlebars.registerHelper('case', function(value, options) {
+
+    Handlebars.registerHelper('case', function (value, options) {
         if (value == this.switch_value) {
             this.switch_break = true;
             return options.fn(this);
         }
     });
-        
-    Handlebars.registerHelper('default', function(value, options) {
+
+    Handlebars.registerHelper('default', function (value, options) {
         if (this.switch_break == false) {
             return value;
         }
@@ -1561,10 +1595,10 @@ export function registerHandlebars() {
     Handlebars.registerHelper('isdefined', function (value) {
         return value !== undefined;
     });
-    
-    Handlebars.registerHelper('ifIn', function(elem, list, options) {
-        if(list.indexOf(elem) > -1) {
-          return options.fn(this);
+
+    Handlebars.registerHelper('ifIn', function (elem, list, options) {
+        if (list.indexOf(elem) > -1) {
+            return options.fn(this);
         }
         return options.inverse(this);
     });
@@ -1587,12 +1621,12 @@ export function registerHandlebars() {
 export function isTokenLinked(actor, tokenId) {
     // Get the token from the canvas
     const token = canvas.tokens.get(tokenId);
-    
+
     // If we have a token, check its document's actorLink property
     if (token) {
         return token.document.actorLink;
     }
-    
+
     // If no token found, assume it's linked if it's not a synthetic token actor
     return !actor.isToken;
 }
@@ -1605,7 +1639,7 @@ export function isTokenLinked(actor, tokenId) {
  */
 export function shouldEnforceSpellPreparation(actor, tokenId) {
     const isLinked = isTokenLinked(actor, tokenId);
-    
+
     // Debug log to help track issues
     console.debug("BG3 Inspired Hotbar | Spell preparation check:", {
         actorId: actor.id,
@@ -1619,7 +1653,7 @@ export function shouldEnforceSpellPreparation(actor, tokenId) {
     if (isLinked) {
         return game.settings.get(BG3CONFIG.MODULE_NAME, 'enforceSpellPreparationPC');
     }
-    
+
     // If unlinked token - use NPC setting
     return game.settings.get(BG3CONFIG.MODULE_NAME, 'enforceSpellPreparationNPC');
 }
@@ -1650,20 +1684,20 @@ async function _migrateConsumableSettings() {
     try {
         const settingsToMigrate = [
             'container1AutoPopulate',
-            'container2AutoPopulate', 
+            'container2AutoPopulate',
             'container3AutoPopulate'
         ];
-        
+
         for (const settingKey of settingsToMigrate) {
             const currentSetting = game.settings.get(BG3CONFIG.MODULE_NAME, settingKey);
-            
+
             if (currentSetting.includes('consumable')) {
                 // Replace "consumable" with the most common subtypes
                 const newSetting = currentSetting.filter(type => type !== 'consumable');
                 newSetting.push('consumable:potion', 'consumable:scroll');
-                
+
                 await game.settings.set(BG3CONFIG.MODULE_NAME, settingKey, newSetting);
-                console.log(`${BG3CONFIG.MODULE_NAME} | Migrated ${settingKey} from "consumable" to consumable subtypes`);
+    
             }
         }
     } catch (error) {

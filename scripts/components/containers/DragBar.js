@@ -12,6 +12,10 @@ export class DragBar extends BG3Component {
         this.totalCols = 0;
         this.cellWidth = 0;
         this.deltaX = 0;
+
+    // Bound handlers for add/remove symmetry
+    this._onMouseMove = this.handleMouseMove.bind(this);
+    this._onMouseUp = this.handleMouseUp.bind(this);
     }
 
     get classes() {
@@ -30,11 +34,12 @@ export class DragBar extends BG3Component {
     handleMouseMove(e) {
       if (!this.isDragging) return;
       
-      // Calculate the delta in pixels
-      const deltaX = e.clientX - this.startX;
-      
-      // Calculate the delta in columns (can be fractional)
-      const deltaColsFractional = this.deltaX / this.cellWidth;
+    // Calculate the delta in pixels
+    const deltaX = e.clientX - this.startX;
+    this.deltaX = deltaX;
+    
+    // Calculate the delta in columns (can be fractional)
+    const deltaColsFractional = this.deltaX / this.cellWidth;
       
       // Calculate potential new column counts
       const newLeftCols = this.startLeftCols + deltaColsFractional;
@@ -42,9 +47,12 @@ export class DragBar extends BG3Component {
       
       // Only proceed if both containers would have at least 1 column
       if (newLeftCols >= 0 && newRightCols >= 0) {
-        this.deltaX = deltaX;
-        // Update the drag indicator position
-        this.indicator.style.transform = `translateX(${this.deltaX}px)`;
+      // Update the drag indicator position compensating for UI scale
+      const root = ui.BG3HOTBAR?.element?.[0];
+      const rootStyle = root ? getComputedStyle(root) : null;
+      const scale = rootStyle ? Number(parseFloat(rootStyle.getPropertyValue('--bg3-scale-ui') || '1')) || 1 : 1;
+      const adjustedPx = this.deltaX / scale;
+      this.indicator.style.transform = `translateX(${adjustedPx}px)`;
       }
     };
 
@@ -84,8 +92,8 @@ export class DragBar extends BG3Component {
         document.body.classList.remove('dragging-active');
         ui.BG3HOTBAR.element[0].classList.remove('dragging-in-progress');
         
-        document.removeEventListener('mousemove', this.handleMouseMove);
-        document.removeEventListener('mouseup', this.handleMouseUp);
+    document.removeEventListener('mousemove', this._onMouseMove);
+    document.removeEventListener('mouseup', this._onMouseUp);
     };
 
     async _registerEvents() {
@@ -112,8 +120,8 @@ export class DragBar extends BG3Component {
             document.body.classList.add('dragging-active');
             ui.BG3HOTBAR.element[0].classList.add('dragging-in-progress');
             
-            document.addEventListener('mousemove', this.handleMouseMove.bind(this));
-            document.addEventListener('mouseup', this.handleMouseUp.bind(this));
+      document.addEventListener('mousemove', this._onMouseMove);
+      document.addEventListener('mouseup', this._onMouseUp);
         });
     }
 }

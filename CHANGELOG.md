@@ -1,3 +1,25 @@
+## [3.4.2] - 2025-08-08
+### Fixed
+- **Unlinked Tokens Autopopulate** - Fixed breaking bug getting caught with populating common actions container
+
+## [3.4.1] - 2025-08-08
+### Fixed
+- **Active Effects** - Fixed active effects not re-enabling or able to be deleted if disabled
+
+## [3.4.0] - 2025-08-07
+### Added
+- **Container Popovers** - Add bags, pouches, and other containers options to your hotbar to open them in a popover window showing their contents. Items in the container can be moved around the popover, but other features and items should not be placed here if they don't belong to the container itself
+
+### Reworked
+- **Target Selector** - Refactored, changed UI/UX, added keybindings for accept and roll (default Enter), added setting for skipping if target already selected (Issue: [#226 & #234])
+
+### Fixed
+- **Hotbar Auto-Update** - Items now automatically appear in hotbars when given to any character, even if their token and therefor hotbar isn't currently selected. Giving items to un/linked NPCs for example
+- **Consumable Items** - Potions, scrolls, and other consumables now properly auto-populate to hotbars with autopopulate feature
+- **Actor Duplication** - Duplicated actors now correctly reference their own items instead of the original actor's items when the hotbar is not already rendered (Issue: [#228])
+- **Drag Bar Movement** - Fixed to move at the right speed with set scale
+- **Common Actions Bug** - Common Actions would sometimes duplicate when the container was empty but the features were on the sheet and then the token was placed on the canvas again
+
 ## [3.3.1] - 2025-07-31
 ### Fixed
  - **Passive Features Auto-Populate** - NPCs should autopopulate their passive features when toekn is created. This function was lost in last update(s).

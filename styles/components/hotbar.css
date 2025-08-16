@@ -71,7 +71,8 @@
    Grid Cells
    ========================================================================== */
 
-#bg3-hotbar-container .hotbar-cell {
+#bg3-hotbar-container .hotbar-cell,
+.bg3-container-popover .hotbar-cell {
     background: var(--bg3-hotbar-background-color);
     border: var(--bg3-cell-border-width) solid var(--bg3-hotbar-border-color);
     border-radius: 4px;
@@ -95,11 +96,13 @@
   border-right-color: var(--bg3-hotbar-border-color) !important;
 }
 
-#bg3-hotbar-container .hotbar-cell.has-item {
+#bg3-hotbar-container .hotbar-cell.has-item,
+.bg3-container-popover .hotbar-cell.has-item {
     cursor: pointer;
 }
 
-#bg3-hotbar-container .hotbar-cell.used, #bg3-hotbar-container .hotbar-cell[data-highlight="excluded"] {
+#bg3-hotbar-container .hotbar-cell.used, #bg3-hotbar-container .hotbar-cell[data-highlight="excluded"],
+.bg3-container-popover .hotbar-cell.used, .bg3-container-popover .hotbar-cell[data-highlight="excluded"] {
   opacity: .25;
 }
 
@@ -151,7 +154,8 @@
     border-color: var(--bg3-apothecary);
 }
 
-#bg3-hotbar-container .hotbar-cell:hover {
+#bg3-hotbar-container .hotbar-cell:hover,
+.bg3-container-popover .hotbar-cell:hover {
     border-color: var(--bg3-hotbar-border-color-hover);
     background: var(--bg3-hotbar-background-color-hover);
 }
@@ -169,7 +173,8 @@
    Hotbar Items
    ========================================================================== */
 
-#bg3-hotbar-container .hotbar-item {
+#bg3-hotbar-container .hotbar-item,
+.bg3-container-popover .hotbar-item {
     /* width: calc(100% - 4px);
     height: calc(100% - 4px); */
     width: 100%;
@@ -188,7 +193,8 @@
     filter: grayscale(100%) brightness(60%);
 }
 
-#bg3-hotbar-container .hotbar-item-name {
+#bg3-hotbar-container .hotbar-item-name,
+.bg3-container-popover .hotbar-item-name {
     position: absolute;
     bottom: 0;
     left: 0;
@@ -205,11 +211,13 @@
     pointer-events: none;
 }
 
-#bg3-hotbar-container[data-item-name="true"] .hotbar-item-name {
+#bg3-hotbar-container[data-item-name="true"] .hotbar-item-name,
+.bg3-container-popover[data-item-name="true"] .hotbar-item-name {
     display: block;
 }
 
-#bg3-hotbar-container .hotbar-item-uses, #bg3-hotbar-container .hotbar-item-quantity {
+#bg3-hotbar-container .hotbar-item-uses, #bg3-hotbar-container .hotbar-item-quantity,
+.bg3-container-popover .hotbar-item-uses, .bg3-container-popover .hotbar-item-quantity {
     position: absolute;
     top: 0;
     display: none;
@@ -223,23 +231,28 @@
     text-shadow: var(--shadow-text-stroke);
 }
 
-#bg3-hotbar-container .hotbar-item-uses {
+#bg3-hotbar-container .hotbar-item-uses,
+.bg3-container-popover .hotbar-item-uses {
     right: 0;
 }
 
-#bg3-hotbar-container .hotbar-item-quantity {
+#bg3-hotbar-container .hotbar-item-quantity,
+.bg3-container-popover .hotbar-item-quantity {
     left: 0;
 }
 
-#bg3-hotbar-container .hotbar-item-uses.depleted {
+#bg3-hotbar-container .hotbar-item-uses.depleted,
+.bg3-container-popover .hotbar-item-uses.depleted {
     color: #ff4444;
 } 
 
-#bg3-hotbar-container[data-item-use="true"] .bg3-hotbar-container .hotbar-item-uses, #bg3-hotbar-container[data-item-use="true"] .bg3-hotbar-container .hotbar-item-quantity {
-    display: block;
+#bg3-hotbar-container[data-item-use="true"] .bg3-hotbar-container .hotbar-item-uses, #bg3-hotbar-container[data-item-use="true"] .bg3-hotbar-container .hotbar-item-quantity,
+.bg3-container-popover[data-item-use="true"] .hotbar-item-uses, .bg3-container-popover[data-item-use="true"] .hotbar-item-quantity {
+    display: block !important;
 }
 
-#bg3-hotbar-container[data-item-use="true"] .bg3-hotbar-container .hotbar-item-uses::before, #bg3-hotbar-container[data-item-use="true"] .bg3-hotbar-container .hotbar-item-quantity::before {
+#bg3-hotbar-container[data-item-use="true"] .bg3-hotbar-container .hotbar-item-uses::before, #bg3-hotbar-container[data-item-use="true"] .bg3-hotbar-container .hotbar-item-quantity::before,
+.bg3-container-popover[data-item-use="true"] .hotbar-item-uses::before, .bg3-container-popover[data-item-use="true"] .hotbar-item-quantity::before {
     border-top: 1.5rem solid rgba(0, 0, 0, 0);
     content: "";
     height: 0;
@@ -250,12 +263,14 @@
     z-index: -1;
 }
 
-#bg3-hotbar-container[data-item-use="true"] .bg3-hotbar-container .hotbar-item-uses::before {
+#bg3-hotbar-container[data-item-use="true"] .bg3-hotbar-container .hotbar-item-uses::before,
+.bg3-container-popover[data-item-use="true"] .hotbar-item-uses::before {
     border-left: 1.5rem solid rgba(0, 0, 0, 0);
     right: 0;
 }
 
-#bg3-hotbar-container[data-item-use="true"] .bg3-hotbar-container .hotbar-item-quantity::before {
+#bg3-hotbar-container[data-item-use="true"] .bg3-hotbar-container .hotbar-item-quantity::before,
+.bg3-container-popover[data-item-use="true"] .hotbar-item-quantity::before {
     border-right: 1.5rem solid rgba(0, 0, 0, 0);
     left: 0;
 }

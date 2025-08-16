@@ -11,18 +11,20 @@ export class AutoSort {
             // Convert items object to array for sorting
             const items = [];
             
-            // First pass: collect all items and their UUIDs
-            for (const [key, item] of Object.entries(container.data.items)) {
+            // First pass: collect only valid items (with a real uuid)
+            for (const [key, rawItem] of Object.entries(container.data.items)) {
+                if (!rawItem || !rawItem.uuid || typeof rawItem.uuid !== "string") continue;
                 items.push({
                     key,
-                    ...item,
-                    sortData: null  // We'll populate this with fresh data
+                    ...rawItem,
+                    sortData: null // We'll populate this with fresh data
                 });
             }
             
             // Second pass: fetch fresh data for each item
             for (const item of items) {
                 try {
+                    if (!item.uuid) continue;
                     const itemData = await fromUuid(item.uuid);
                     if (itemData) {
                         item.sortData = {
@@ -50,7 +52,11 @@ export class AutoSort {
             }
 
             // Sort items
-            this._sortItems(items);
+            if (container.id?.startsWith('container_')) {
+                this._sortItemsByName(items);
+            } else {
+                this._sortItems(items);
+            }
 
             // Clear container
             container.data.items = {};
@@ -58,19 +64,21 @@ export class AutoSort {
             // Re-add items in sorted order
             let r = 0;
             let c = 0;
-            const cols = container.data.cols || container.data.cols || 5;
-            const rows = container.data.rows || container.data.rows || 3;
+            const cols = container.data.cols || 5;
+            const rows = container.data.rows || 3;
 
             for (const item of items) {
+                // Stop if we've run out of grid space
+                if (r >= rows) break;
+                
                 const slotKey = `${c}-${r}`;
-                container.data.items[slotKey] = {
-                    uuid: item.uuid,
-                    // name: item.name,
-                    // icon: item.icon,
-                    // type: item.type,
-                    // activation: item.activation,
-                    // sortData: item.sortData
-                };
+                if (item.uuid) {
+                    container.data.items[slotKey] = {
+                        uuid: item.uuid,
+                        // Keep any additional data that might exist
+                        ...(item.sortData && { sortData: item.sortData })
+                    };
+                }
 
                 // Move to next position
                 c++;
@@ -78,18 +86,17 @@ export class AutoSort {
                     c = 0;
                     r++;
                 }
-
-                // Stop if we've filled all rows
-                if (r >= rows) break;
             }
 
             // Render container and persist changes
             if (container.render) {
                 container.render();
             }
-            if (ui.BG3HOTBAR?.manager?.persist) {
+            
+            // Only persist for regular containers, not container popovers
+            // (Container popovers handle their own persistence via ContainerPopover.saveContainerLayout)
+            if (!container.id?.startsWith('container_') && ui.BG3HOTBAR?.manager?.persist) {
                 await ui.BG3HOTBAR.manager.persist();
-                // await container.ui.manager.persist();
             }
 
             ui.notifications.info("Container sorted successfully.");
@@ -143,5 +150,9 @@ export class AutoSort {
                     return (a.name || "").localeCompare(b.name || "");
             }
         });
+    }
+
+    static _sortItemsByName(items) {
+        items.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
     }
 }

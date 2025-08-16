@@ -4,3 +4,5 @@ TODO.md
 packs
 .vscode
 .DS_Store
+REFACTORING_AUDIT.md
+SYSTEM_SEPARATION_ANALYSIS.md

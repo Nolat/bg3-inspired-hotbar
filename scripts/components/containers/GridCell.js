@@ -2,6 +2,7 @@ import { BG3Component } from "../component.js";
 import { fromUuid } from "../../utils/foundryUtils.js";
 import { ControlsManager } from "../../managers/ControlsManager.js";
 import { MenuContainer } from "./MenuContainer.js";
+import { ContainerPopover } from "./ContainerPopover.js";
 
 export class GridCell extends BG3Component {
     constructor(data, parent) {
@@ -231,7 +232,12 @@ export class GridCell extends BG3Component {
             }
             if(item) {
                 try {
-                    console.log(item)
+                    // Check if item is a container - show popover instead of using it
+                    if (ContainerPopover.isContainer(item)) {
+                        const popover = new ContainerPopover(item, this);
+                        await popover.show(this.element);
+                        return;
+                    }
                     
                     // Always use normal flow - target selector will be handled at activity level
                     await this.useItemDirectly(item, e);
@@ -319,8 +325,58 @@ export class GridCell extends BG3Component {
         if(item.execute) {
             item.execute();
         } else if(item.use) {
-            // Check if target selector is enabled and configure dialog accordingly
+            // Check if target selector is enabled
             const targetSelectorEnabled = game.settings.get('bg3-inspired-hotbar', 'enableTargetSelector') ?? true;
+            
+            // If target selector is enabled, check if this item needs targeting
+            if (targetSelectorEnabled && item.system?.activities?.size === 1) {
+                // Single activity item - check if it needs targeting
+                const activity = Array.from(item.system.activities.values())[0];
+                    const { needsActivityTargeting, getActivityTargetRequirements } = await import('../../utils/targetingRules.js');
+                
+                    if (needsActivityTargeting(activity)) {
+                    
+                    // Get current token
+                    const currentToken = ui.BG3HOTBAR.manager.token;
+                    if (!currentToken) {
+                        ui.notifications.warn("No token selected for targeting");
+                        return;
+                    }
+                    
+                    // Get targeting requirements
+                    const requirements = getActivityTargetRequirements(activity, item);
+                    
+                    // Create and show target selector
+                    const { TargetSelector } = await import('../../managers/TargetSelector.js');
+                    const targetSelector = new TargetSelector({
+                        token: currentToken,
+                        requirements: requirements
+                    });
+                    
+                    // Wait for target selection
+                    const selectedTargets = await targetSelector.select();
+                    
+                    // If no targets selected (cancelled), don't proceed
+                    if (!selectedTargets || selectedTargets.length === 0) {
+                        return;
+                    }
+                    
+                    // Set targets for the activity execution
+                    const targetIds = selectedTargets.map(t => t.id);
+                    canvas.tokens.setTargets(targetIds, { mode: "replace" });
+                    
+                    // Now execute the activity directly
+                    await activity.use();
+                    
+                    // Clear targets after a short delay
+                    setTimeout(() => {
+                        canvas.tokens.setTargets([], { mode: "replace" });
+                    }, 100);
+                    
+                    if (this._renderInner) this._renderInner();
+                    return;
+                }
+            }
             
             const options = {
                 configureDialog: targetSelectorEnabled, // Enable activity selection when target selector is on

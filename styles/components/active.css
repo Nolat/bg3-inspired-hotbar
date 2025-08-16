@@ -38,9 +38,15 @@
 #bg3-hotbar-container .active-effect-icon.disabled img {
   filter: grayscale(100%) brightness(50%);
   opacity: 0.7;
+  pointer-events: auto;
 }
 
 #bg3-hotbar-container .active-effect-icon:not(.disabled) img {
   filter: none;
   opacity: 1;
+}
+
+/* Ensure disabled active effects still accept clicks for context menu */
+#bg3-hotbar-container .active-effect-icon.disabled {
+  pointer-events: auto;
 }

@@ -33,6 +33,14 @@ export class PassiveContainer extends BG3Component {
     get selectedPassives() {
         const saved = this.actor.getFlag(BG3CONFIG.MODULE_NAME, "selectedPassives");
         if (saved && Array.isArray(saved)) return new Set(saved);
+        // Fallback: for unlinked tokens (or when no explicit selection exists), default to all passive feats
+        const isUnlinkedToken = this.token && this.token.actor?.id === this.actor?.id && !this.token.actorLink;
+        if (isUnlinkedToken) {
+            const allPassiveUuids = this.actor.items
+                .filter(item => item.type === "feat" && item.system.activities instanceof Map && item.system.activities.size === 0)
+                .map(item => item.uuid);
+            return new Set(allPassiveUuids);
+        }
         return;
     }
 

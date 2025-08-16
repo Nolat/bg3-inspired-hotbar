@@ -39,6 +39,7 @@ export class BG3Hotbar extends Application {
         Hooks.on("deleteToken", this._onDeleteToken.bind(this));
         Hooks.on("updateToken", this._onUpdateToken.bind(this));
         Hooks.on("updateActor", this._onUpdateActor.bind(this));
+        Hooks.on("createActor", this._onCreateActor.bind(this));
         // Hooks.on("deleteScene", this._onDeleteScene.bind(this));
         Hooks.on("updateCombat", this._onUpdateCombat.bind(this));
         Hooks.on("deleteCombat", this._onDeleteCombat.bind(this));
@@ -137,7 +138,22 @@ export class BG3Hotbar extends Application {
 
     async _onUpdateToken(token, changes, options, userId) {
         if (!this.manager || game.user.id !== userId) return;
-        // If this is our current token and actor-related data changed
+        // If token was switched from linked to unlinked, reset stored data and repopulate
+        if (changes?.actorLink === false) {
+            try {
+                console.log("BG3 Hotbar | Detected link->unlink. Resetting and autopopulating hotbar for token:", token.name);
+                await this.manager.cleanupTokenData(token.id);
+                await AutoPopulateCreateToken.populateUnlinkedToken(token, true);
+                if (token.id === this.manager.currentTokenId) {
+                    await this.generate(token);
+                }
+                console.log("BG3 Hotbar | Completed reset and autopopulate for unlinked token:", token.name);
+                return;
+            } catch (e) {
+                console.error("BG3 Hotbar | Error resetting hotbar for unlinked token:", e);
+            }
+        }
+        // If this is our current token and other actor-related data changed
         if (token.id === this.manager.currentTokenId && (changes.actorId || changes.actorData || changes.actorLink)) {
             this.refresh();
         }
@@ -169,11 +185,55 @@ export class BG3Hotbar extends Application {
         }
     }
 
+    async _onCreateActor(actor, options, userId) {
+        if (!this.manager || game.user.id !== userId) return;
+        
+        // Check if this actor has hotbar data (indicating it might be duplicated)
+        const containersData = actor.getFlag(BG3CONFIG.MODULE_NAME, BG3CONFIG.CONTAINERS_NAME);
+        if (!containersData) return;
+        
+        // Add a small delay to ensure the actor and its items are fully created
+        setTimeout(async () => {
+            try {
+                console.log(`BG3 Hotbar | Checking duplicated actor "${actor.name}" for UUID fixes`);
+                
+                // Fix UUIDs in the duplicated actor's hotbar data
+                const fixedContainers = await this._fixDuplicatedActorUUIDs(actor, containersData);
+                
+                if (fixedContainers) {
+                    // Update the actor's flag with the fixed UUIDs
+                    await actor.setFlag(BG3CONFIG.MODULE_NAME, BG3CONFIG.CONTAINERS_NAME, fixedContainers);
+                    console.log(`BG3 Hotbar | Fixed UUIDs for duplicated actor "${actor.name}"`);
+                }
+            } catch (error) {
+                console.error(`BG3 Hotbar | Error fixing UUIDs for duplicated actor "${actor.name}":`, error);
+            }
+        }, 100);
+    }
+
     async _onUpdateActor(actor, changes, options, userId) {
         if(!this.manager) return;
         
         if(changes?.flags?.[BG3CONFIG.MODULE_NAME] && game.user.id !== userId) return this.manager.socketUpdateData(actor, changes);
         
+        // Detect prototype token link->unlink toggles (v13): apply reset+autopopulate to placed tokens for this actor
+        if (changes?.prototypeToken?.actorLink === false) {
+            try {
+                console.log(`BG3 Hotbar | Prototype token link disabled for actor "${actor.name}". Resetting any unlinked placed tokens for this actor.`);
+                const affected = canvas.tokens.placeables.filter(t => t.actor?.id === actor.id && t.actorLink === false);
+                for (const token of affected) {
+                    await this.manager.cleanupTokenData(token.id);
+                    await AutoPopulateCreateToken.populateUnlinkedToken(token, true);
+                    if (token.id === this.manager.currentTokenId) {
+                        await this.generate(token);
+                    }
+                }
+                console.log(`BG3 Hotbar | Processed ${affected.length} placed token(s) for actor "${actor.name}" after prototype unlink.`);
+            } catch (e) {
+                console.error("BG3 Hotbar | Error processing prototype unlink reset:", e);
+            }
+        }
+
         // if (game.user.id !== userId) return;
         
         // Check if this update affects our current token
@@ -256,32 +316,25 @@ export class BG3Hotbar extends Application {
         // Check if this is an activity choice dialog
         const isDnd5e2 = app.options?.classes?.includes?.('dnd5e2');
         const hasActivityElements = html.querySelectorAll('[data-activity-id]').length > 0;
-        console.log('BG3 Target Selector | Dialog checks:', {
-            isDnd5e2,
-            hasActivityElements,
-            willIntercept: isDnd5e2 && hasActivityElements
-        });
 
         if (!isDnd5e2 || !hasActivityElements) return;
 
-        console.log('BG3 Target Selector | Intercepting activity dialog submit');
+        
 
         // Import targeting utilities
-        const { needsActivityTargeting, getActivityTargetRequirements } = await import('./utils/targetingRules.js');
+                    const { needsActivityTargeting, getActivityTargetRequirements } = await import('./utils/targetingRules.js');
         const { TargetSelector } = await import('./managers/TargetSelector.js');
 
         // Hook into button clicks instead of submit method
         setTimeout(() => {
             const buttons = html.querySelectorAll('button[data-activity-id]');
-            console.log('BG3 Target Selector | Found activity buttons:', buttons.length);
             
             buttons.forEach(button => {
                 const activityId = button.dataset.activityId;
-                console.log('BG3 Target Selector | Setting up button listener for:', activityId);
                 
                 // Add our own click listener with higher priority
                 button.addEventListener('click', async (event) => {
-                    console.log('BG3 Target Selector | Button clicked for activity:', activityId);
+                    
                     
                     // Stop the event from propagating to prevent normal execution
                     event.preventDefault();
@@ -292,28 +345,18 @@ export class BG3Hotbar extends Application {
                     const item = app.item || app.object;
                     const activity = item?.system?.activities?.get(activityId);
 
-                    console.log('BG3 Target Selector | Button click - Item and activity:', {
-                        item: item?.name,
-                        hasActivity: !!activity,
-                        activityName: activity?.name,
-                        activityId
-                    });
+                    
 
                     if (!activity) {
-                        console.log('BG3 Target Selector | No activity found, allowing default behavior');
+                        
                         return true; // Allow default behavior
                     }
 
                     const needsTargeting = needsActivityTargeting(activity);
-                    console.log('BG3 Target Selector | Button click - Activity targeting check:', {
-                        activityName: activity.name,
-                        needsTargeting,
-                        activityRange: activity.range,
-                        activityTarget: activity.target
-                    });
+                    
 
                     if (!needsTargeting) {
-                        console.log('BG3 Target Selector | Activity does not need targeting, allowing default behavior');
+                        
                         // Re-trigger the original click without our listener
                         button.removeEventListener('click', arguments.callee);
                         button.click();
@@ -322,54 +365,47 @@ export class BG3Hotbar extends Application {
 
                     // Get current token
                     const currentToken = ui.BG3HOTBAR.manager.token;
-                    console.log('BG3 Target Selector | Current token:', currentToken?.name);
                     if (!currentToken) {
                         ui.notifications.warn("No token selected for targeting");
                         return;
                     }
 
                     // Close the activity dialog first
-                    console.log('BG3 Target Selector | Closing activity dialog');
+                    
                     await app.close();
 
                     // Get targeting requirements for this activity
-                    const requirements = getActivityTargetRequirements(activity);
-                    console.log('BG3 Target Selector | Targeting requirements:', requirements);
+                    const requirements = getActivityTargetRequirements(activity, item);
 
                     // Create and show target selector
-                    console.log('BG3 Target Selector | Creating target selector');
+                    
                     const targetSelector = new TargetSelector({
                         token: currentToken,
                         requirements: requirements
                     });
 
                     // Wait for target selection
-                    console.log('BG3 Target Selector | Waiting for target selection');
+                    
                     const selectedTargets = await targetSelector.select();
 
-                    console.log('BG3 Target Selector | Target selection result:', {
-                        targetsSelected: selectedTargets?.length || 0,
-                        targetNames: selectedTargets?.map(t => t.name) || []
-                    });
+                    
 
                     // If no targets selected (cancelled), don't proceed
                     if (!selectedTargets || selectedTargets.length === 0) {
-                        console.log('BG3 Target Selector | No targets selected, cancelling');
                         return;
                     }
 
                     // Set targets for the activity execution
                     const targetIds = selectedTargets.map(t => t.id);
-                    console.log('BG3 Target Selector | Setting targets:', targetIds);
                     canvas.tokens.setTargets(targetIds, { mode: "replace" });
 
                     // Now execute the activity directly
-                    console.log('BG3 Target Selector | Executing activity directly');
+                    
                     await activity.use();
 
                     // Clear targets after a short delay
                     setTimeout(() => {
-                        console.log('BG3 Target Selector | Clearing targets');
+                        
                         canvas.tokens.setTargets([], { mode: "replace" });
                     }, 100);
                     
@@ -476,6 +512,69 @@ export class BG3Hotbar extends Application {
                 resolve();
             }, 300);
         });
+    }
+
+    /**
+     * Fix UUIDs in duplicated actor's hotbar data to point to the new actor's items
+     * @param {Actor} newActor - The newly created/duplicated actor
+     * @param {Object} containersData - The hotbar containers data
+     * @returns {Object|null} - Fixed containers data or null if no changes needed
+     */
+    async _fixDuplicatedActorUUIDs(newActor, containersData) {
+        let hasChanges = false;
+        const fixedContainers = foundry.utils.deepClone(containersData);
+        
+        // Helper function to fix UUIDs in a container
+        const fixContainerUUIDs = async (container) => {
+            if (!container?.items) return;
+            
+            for (const [slotKey, item] of Object.entries(container.items)) {
+                if (!item?.uuid) continue;
+                
+                // Check if this UUID points to an item from a different actor
+                const uuidParts = item.uuid.split('.');
+                const actorIndex = uuidParts.indexOf('Actor');
+                
+                if (actorIndex !== -1 && uuidParts[actorIndex + 1] !== newActor.id) {
+                    // This UUID points to a different actor - try to find the equivalent item in the new actor
+                    const originalItemId = uuidParts[uuidParts.length - 1];
+                    const newItem = newActor.items.get(originalItemId);
+                    
+                    if (newItem) {
+                        // Update the UUID to point to the new actor's item
+                        item.uuid = newItem.uuid;
+                        hasChanges = true;
+                        console.log(`BG3 Hotbar | Fixed UUID: ${originalItemId} -> ${newItem.uuid}`);
+                    } else {
+                        // Item doesn't exist in new actor, remove it from hotbar
+                        delete container.items[slotKey];
+                        hasChanges = true;
+                        console.log(`BG3 Hotbar | Removed missing item: ${originalItemId}`);
+                    }
+                }
+            }
+        };
+        
+        // Fix UUIDs in all container types
+        if (fixedContainers.hotbar) {
+            for (const container of fixedContainers.hotbar) {
+                await fixContainerUUIDs(container);
+            }
+        }
+        
+        if (fixedContainers.weapon) {
+            for (const container of fixedContainers.weapon) {
+                await fixContainerUUIDs(container);
+            }
+        }
+        
+        if (fixedContainers.combat) {
+            for (const container of fixedContainers.combat) {
+                await fixContainerUUIDs(container);
+            }
+        }
+        
+        return hasChanges ? fixedContainers : null;
     }
 
     async generate(token) {
