@@ -1,5 +1,32 @@
 <form>
     <p>Blank attributes won't be displayed.</p>
+    <p class="notes">
+        Show a feature’s uses/max over the portrait:
+        <br>
+        By Name (exact item name):
+        <br>
+        - Current: <code>&#123;&#123;itemName:Focus Points:system.uses.value&#125;&#125;</code>
+        <br>
+        - Max: <code>&#123;&#123;itemName:Focus Points:system.uses.max&#125;&#125;</code>
+        <br>
+        - Together (e.g. 3/5): <code>&#123;&#123;itemName:Focus Points:system.uses.value&#125;&#125;/&#123;&#123;itemName:Focus Points:system.uses.max&#125;&#125;</code>
+        <br><br>
+        By UUID (copy from the item’s sheet):
+        <br>
+        - Current: <code>&#123;&#123;itemUuid:&lt;PASTE_UUID&gt;:system.uses.value&#125;&#125;</code>
+        <br>
+        - Max: <code>&#123;&#123;itemUuid:&lt;PASTE_UUID&gt;:system.uses.max&#125;&#125;</code>
+        <br>
+        - Together: <code>&#123;&#123;itemUuid:&lt;PASTE_UUID&gt;:system.uses.value&#125;&#125;/&#123;&#123;itemUuid:&lt;PASTE_UUID&gt;:system.uses.max&#125;&#125;</code>
+        <br><br>
+        Custom Flags:
+        <br>
+        - <code>flags.custom-dnd5e.rdpg</code>
+        <br></br>
+    </p>
+    <p class="notes">
+        Note: Portrait extra data is global per client and persists across actors. Item lookups only display if the selected actor has the item, so this is best used only for Player Characters.
+    </p>
     <div class="dialog-container">
         {{#each extraInfos}}
         <div class="container-section">
@@ -7,7 +34,7 @@
                 <p class="notes">{{pos}}</p>
                 <div class="form-group">
                     <label for="attr{{@index}}">Attribute</label>
-                    <input type="text" class="attr" name="attr{{@index}}" value="{{attr}}">
+                    <input type="text" class="attr" name="attr{{@index}}" value="{{attr}}" title="Examples: system.attributes.ac.value, flags.custom-dnd5e.rdpg, =15">
                     <select class="list-attr">
                         <option></option>
                         {{#each ../listAttrChoices as |attrs|}}
@@ -17,7 +44,12 @@
                 </div>
                 <div class="form-group">
                     <label for="icon{{@index}}">Icon</label>
-                    <input type="text" class="icon" name="icon{{@index}}" value="{{icon}}">
+                    <div class="form-fields">
+                        <input type="text" class="icon" name="icon{{@index}}" value="{{icon}}" placeholder="e.g. fas fa-bolt" title="Use full class, e.g. 'fas fa-bolt'">
+                        <button type="button" class="icon-picker" data-index="{{@index}}" title="Pick an icon">
+                            <i class="fas fa-icons"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="color{{@index}}">Color</label>

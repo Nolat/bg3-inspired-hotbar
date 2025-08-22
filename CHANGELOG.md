@@ -1,3 +1,40 @@
+## [3.4.4] - 2025-08-19
+### Portrait Extra Data
+- Portrait info: You can now show two values in one line (like 3/5). Example:
+  - Focus {{itemName:Focus Points:system.uses.value}}/{{itemName:Focus Points:system.uses.max}}
+- Portrait info: Point to a feature by its name (itemName:...) or by its UUID (itemUuid:...).
+- Portrait info updates right away when you change the character sheet.
+- If a value is missing for the current selected actor, the portrait info will not show the value.
+
+### Portrait Mask & Context Menu
+- Health overlay now clips to the actual portrait image when Overlay Mode is enabled (no forced circular clipping).
+- Token image scaling applies to the masked subcontainer so both the mask and HP overlay follow the expanded portrait.
+- Right-click portrait menu no longer gets cut off when the portrait is masked; overflow is allowed and scaling is centered to prevent top-cropping.
+
+### General
+- Added setting: "Show Ability Button only on hover". When enabled, the ability button remains hidden until the BG3 Hotbar (or its children) are hovered.
+
+### Active Effects
+- Fixed an issue where removing an active effect could leave a duplicate-looking icon until reselecting the token. The active effects bar now refreshes cleanly on changes.
+
+
+### Auto-Populate
+- Auto-populate on token creation is now strictly disabled for player characters. Only NPC tokens will auto-populate, respecting the linked/unlinked token settings.
+
+
+## [3.4.3] - 2025-08-16
+### Added
+- **Portrait Extra Data**: Support custom flags in portrait extra data (e.g., `flags.custom-dnd5e.rdpg`) and literal values via `=15`. (Related Issue: [#229])
+
+### Fixed
+- **Auto Sort and Spell Sorting**: Spells sort by level (cantrip–9) then alphabetically; all other types sort alphabetically. (Related Issue: [#244])
+- **Lock Button Icon**: Icon now correctly switches between locked and unlocked states.
+- **Hotbar Auto-Update on Item Create**: Newly added items appear immediately on the hotbar for the current token without requiring a manual re-render.
+- **Item Context Menu Visibility**: Edit/Configure/Remove options only show when a cell has an item.
+- **NPC Common Actions**: Corrected typo preventing vehicle handling during autopopulate (`vehicule` -> `vehicle`).
+- **Extended Filter Sync**: After item deletion via sheet, the extended filter updates to stay in sync.
+- **Spell Prep Warning**: Removed deprecation warning by using `method`/`prepared` instead of `preparation`.
+
 ## [3.4.2] - 2025-08-08
 ### Fixed
 - **Unlinked Tokens Autopopulate** - Fixed breaking bug getting caught with populating common actions container

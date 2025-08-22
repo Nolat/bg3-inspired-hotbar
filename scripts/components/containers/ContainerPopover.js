@@ -4,6 +4,7 @@ import { BG3Component } from "../component.js";
 import { GridContainer } from "./GridContainer.js";
 import { fromUuid } from "../../utils/foundryUtils.js";
 import { BG3CONFIG } from "../../utils/config.js";
+import { AutoSort } from "../../features/AutoSort.js";
 
 /**
  * Container Popover component for displaying container contents in a grid layout
@@ -460,6 +461,31 @@ export class ContainerPopover extends BG3Component {
                 await this.saveContainerLayout({});
                 this.gridContainer.data.items = {};
                 this.gridContainer.render();
+            } else if (action === 'populate') {
+                // Populate only from items within this container (bag)
+                try {
+                    const contents = await this.getContainerContents();
+                    const entries = contents.map((it) => ({ uuid: it?.uuid })).filter((e) => e.uuid);
+                    const sorted = await AutoSort.sortUuidEntries(entries);
+
+                    // Build new layout rows-first within grid bounds
+                    const cols = this.gridContainer.data.cols;
+                    const rows = this.gridContainer.data.rows;
+                    const newItems = {};
+                    let c = 0, r = 0;
+                    for (const entry of sorted) {
+                        if (r >= rows) break;
+                        newItems[`${c}-${r}`] = { uuid: entry.uuid };
+                        c++;
+                        if (c >= cols) { c = 0; r++; }
+                    }
+
+                    this.gridContainer.data.items = newItems;
+                    await this.gridContainer.render();
+                    await this.saveContainerLayout(newItems);
+                } catch (err) {
+                    console.error("BG3 Container Popover | Error populating from bag:", err);
+                }
             } else if (action === 'sort') {
                 // Call original sort action first
                 await originalMenuItemAction.call(this.gridContainer, action);

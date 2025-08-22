@@ -27,16 +27,19 @@ export class AutoSort {
                     if (!item.uuid) continue;
                     const itemData = await fromUuid(item.uuid);
                     if (itemData) {
+                        // Ensure base fields are populated from the source document
+                        item.type = itemData.type;
+                        item.name = itemData.name;
                         item.sortData = {
-                            spellLevel: item.type === "spell" ? (itemData.system?.level ?? 0) : 99,
-                            featureType: item.type === "feat" ? itemData.system?.type?.value ?? "" : "",
-                            name: item.name
+                            spellLevel: itemData.type === "spell" ? (itemData.system?.level ?? 0) : 99,
+                            featureType: itemData.type === "feat" ? itemData.system?.type?.value ?? "" : "",
+                            name: itemData.name
                         };
                     } else {
                         // Fallback to stored sortData if we can't fetch fresh data
                         item.sortData = item.sortData || {
-                            spellLevel: item.type === "spell" ? 99 : 99,
-                            featureType: item.type === "feat" ? "" : "",
+                            spellLevel: 99,
+                            featureType: "",
                             name: item.name
                         };
                     }
@@ -44,19 +47,15 @@ export class AutoSort {
                     console.warn(`Failed to fetch fresh data for item ${item.name}:`, error);
                     // Use stored sortData as fallback
                     item.sortData = item.sortData || {
-                        spellLevel: item.type === "spell" ? 99 : 99,
-                        featureType: item.type === "feat" ? "" : "",
+                        spellLevel: 99,
+                        featureType: "",
                         name: item.name
                     };
                 }
             }
 
-            // Sort items
-            if (container.id?.startsWith('container_')) {
-                this._sortItemsByName(items);
-            } else {
-                this._sortItems(items);
-            }
+            // Sort items using unified priority ordering
+            this._sortItems(items);
 
             // Clear container
             container.data.items = {};
@@ -108,7 +107,8 @@ export class AutoSort {
 
     static _sortItems(items) {
         // Define type order (first to last)
-        const typeOrder = ["weapon", "equipment", "consumable", "feat", "spell", "tool", "loot"];
+        // Required: weapons > features > equipment > spells > consumables > tools (others last)
+        const typeOrder = ["weapon", "feat", "equipment", "spell", "consumable", "tool", "loot"];
         
         items.sort((a, b) => {
             // First, sort by item type according to our defined order
@@ -132,7 +132,7 @@ export class AutoSort {
                         return levelA - levelB;
                     }
                     // If same level, sort alphabetically
-                    return (a.name || "").localeCompare(b.name || "");
+                    return (a.name || a.sortData?.name || "").localeCompare(b.name || b.sortData?.name || "");
 
                 case "feat":
                     // Sort by feature type first
@@ -143,16 +143,62 @@ export class AutoSort {
                         return typeCompare;
                     }
                     // If same type, sort alphabetically
-                    return (a.name || "").localeCompare(b.name || "");
+                    return (a.name || a.sortData?.name || "").localeCompare(b.name || b.sortData?.name || "");
 
                 default:
                     // All other items sort alphabetically within their type
-                    return (a.name || "").localeCompare(b.name || "");
+                    return (a.name || a.sortData?.name || "").localeCompare(b.name || b.sortData?.name || "");
             }
         });
     }
 
     static _sortItemsByName(items) {
         items.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    }
+
+    /**
+     * Enrich a list of uuid entries with type/name/sortData and return a new sorted array.
+     * Accepts either array of strings (uuids) or objects containing { uuid }.
+     * Returns minimal entries { uuid } in sorted order for container placement.
+     * @param {Array<string|{uuid:string}>} entries
+     * @returns {Promise<Array<{uuid:string}>>}
+     */
+    static async sortUuidEntries(entries) {
+        if (!Array.isArray(entries) || entries.length === 0) return [];
+
+        // Normalize to array of { uuid }
+        const normalized = entries
+            .map((e) => (typeof e === 'string' ? { uuid: e } : e))
+            .filter((e) => e && typeof e.uuid === 'string' && e.uuid.length > 0);
+
+        // Fetch docs and build sortable items
+        const enriched = [];
+        for (const entry of normalized) {
+            try {
+                const itemData = await fromUuid(entry.uuid);
+                if (!itemData) {
+                    // Keep placeholder with best-effort defaults
+                    enriched.push({ ...entry, type: undefined, name: undefined, sortData: undefined });
+                    continue;
+                }
+                const type = itemData.type;
+                const name = itemData.name;
+                const sortData = {
+                    spellLevel: type === 'spell' ? (itemData.system?.level ?? 0) : 99,
+                    featureType: type === 'feat' ? (itemData.system?.type?.value ?? '') : '',
+                    name
+                };
+                enriched.push({ ...entry, type, name, sortData });
+            } catch (err) {
+                // Fallback entry on fetch failure
+                enriched.push({ ...entry, type: undefined, name: undefined, sortData: undefined });
+            }
+        }
+
+        // Sort in place
+        this._sortItems(enriched);
+
+        // Return minimal objects in sorted order
+        return enriched.map((e) => ({ uuid: e.uuid }));
     }
 }

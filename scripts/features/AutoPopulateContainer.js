@@ -208,11 +208,12 @@ export class AutoPopulateDialog extends Dialog {
               const enforcePreparation = shouldEnforceSpellPreparation(this.actor, ui.BG3HOTBAR.manager.currentTokenId);
                 
               if (enforcePreparation) {
-                const prep = item.system?.preparation;
+                const method = item.system?.method ?? item.system?.preparation?.mode;
+                const prepared = item.system?.prepared ?? item.system?.preparation?.prepared;
                 // Skip if it's an unprepared "prepared" spell
-                if (!prep?.prepared && prep?.mode === "prepared") continue;
+                if (!prepared && method === "prepared") continue;
                 // Include if it's prepared or has a valid casting mode
-                if (!prep?.prepared && !["pact", "apothecary", "atwill", "innate", "ritual", "always"].includes(prep?.mode)) continue;
+                if (!prepared && !["pact", "apothecary", "atwill", "innate", "ritual", "always"].includes(method)) continue;
               }
             }
             
@@ -233,14 +234,14 @@ export class AutoPopulateDialog extends Dialog {
             return;
           }
     
-          // Sort items by type order
-          AutoSort._sortItems(itemsWithActivities);
+          // Sort items using unified sorter with fresh data
+          const sortedItems = await AutoSort.sortUuidEntries(itemsWithActivities);
           
           // Get existing UUIDs to prevent duplicates
           const existingUuids = AutoPopulateContainer._getExistingUuids();
           
           // Filter out items that already exist in the hotbar
-          const newItems = itemsWithActivities.filter(item => !existingUuids.has(item.uuid));
+          const newItems = sortedItems.filter(item => !existingUuids.has(item.uuid));
           
           if (newItems.length === 0) {
             ui.notifications.warn("All matching items are already in the hotbar.");

@@ -16,7 +16,15 @@ export class ControlsManager {
     static updateMasterLock(value) {
         const newValue = value !== undefined ? value : !game.settings.get(BG3CONFIG.MODULE_NAME, 'masterLockEnabled');
         game.settings.set(BG3CONFIG.MODULE_NAME, 'masterLockEnabled', newValue);
-        document.querySelector('[data-key="controlLock"]').classList.toggle('locked', newValue)
+        const lockBtn = document.querySelector('[data-key="controlLock"]');
+        if (lockBtn) {
+            lockBtn.classList.toggle('locked', newValue);
+            const icon = lockBtn.querySelector('i.fas');
+            if (icon) {
+                icon.classList.remove('fa-lock', 'fa-unlock');
+                icon.classList.add(newValue ? 'fa-lock' : 'fa-unlock');
+            }
+        }
     }
 
     static updateUIDataset(el) {
@@ -25,7 +33,7 @@ export class ControlsManager {
     }
 
     static updateLockSetting(key) {
-        const el = document.querySelector(`[data-key="${key}"`),
+        const el = document.querySelector(`[data-key="${key}"]`),
             settings = game.settings.get(BG3CONFIG.MODULE_NAME, 'lockSettings'),
             masterLock = game.settings.get(BG3CONFIG.MODULE_NAME, 'masterLockEnabled');
         settings[key] = !settings[key];

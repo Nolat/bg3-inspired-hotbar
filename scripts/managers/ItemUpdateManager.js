@@ -323,11 +323,12 @@ export class ItemUpdateManager {
 
         if (changes.system && Object.keys(changes.system).length === 1 && changes.system.hasOwnProperty('equipped')) return;
 
-        // Check if this is a spell and its preparation state changed
-        if (item.type === "spell" && changes.system?.preparation !== undefined) {
-            const prep = item.system.preparation;
-            // Remove if unprepared and not at-will/innate/etc
-            if (!prep.prepared && prep.mode === "prepared") {
+        // Check if this is a spell and its preparation state changed (DnD5e 5.1+: method/prepared)
+        if (item.type === "spell" && (changes.system?.method !== undefined || changes.system?.prepared !== undefined || changes.system?.preparation !== undefined)) {
+            const method = item.system?.method ?? item.system?.preparation?.mode;
+            const prepared = item.system?.prepared ?? item.system?.preparation?.prepared;
+            // Remove if unprepared prepared-spell and not at-will/innate/etc
+            if (!prepared && method === "prepared") {
                 for (const container of ui.BG3HOTBAR.components.container.components.hotbar) {
                     let removed = false;
                     for (const [slotKey, slotItem] of Object.entries(container.data.items)) {
@@ -356,7 +357,7 @@ export class ItemUpdateManager {
                 return;
             }
             // Add if newly prepared or has other valid casting mode
-            else if (prep.prepared || ["pact", "apothecary", "atwill", "innate"].includes(prep.mode)) {
+            else if (prepared || ["pact", "apothecary", "atwill", "innate"].includes(method)) {
                 // Check if it's already in any container
                 let exists = false;
                 for (const container of ui.BG3HOTBAR.components.container.components.hotbar) {
@@ -482,6 +483,18 @@ export class ItemUpdateManager {
             await ui.BG3HOTBAR.manager.persist();
             await ui.BG3HOTBAR.components.container.components.filterContainer.updateExtendedFilter();
         }
+
+        // Always refresh portrait extra infos on item updates for the current actor
+        try {
+            const currentToken2 = ui.BG3HOTBAR.manager.token;
+            if (currentToken2 && currentToken2.actor?.id === item.parent?.id && ui.BG3HOTBAR.rendered) {
+                if (ui.BG3HOTBAR.components?.portrait) {
+                    await ui.BG3HOTBAR.components.portrait._renderInner();
+                }
+            }
+        } catch (e) {
+            // No-op; portrait refresh is best-effort
+        }
     }
 
     async _handleItemCreate(item, options, userId) {
@@ -504,8 +517,37 @@ export class ItemUpdateManager {
         // If this is the currently selected token, also update the UI
         const currentToken = ui.BG3HOTBAR.manager.token;
         if (currentToken && currentToken.actor?.id === itemActor.id && ui.BG3HOTBAR.rendered) {
-            // Refresh the current hotbar UI since this is the selected token
-            await ui.BG3HOTBAR.refresh();
+            try {
+                // First, check if it's already visible in any UI container
+                const uiContainers = ui.BG3HOTBAR.components?.container?.components?.hotbar || [];
+                const alreadyInUI = uiContainers.some((c) => Object.values(c.data.items || {}).some((i) => i?.uuid === item.uuid));
+                if (alreadyInUI) {
+                    await ui.BG3HOTBAR.refresh();
+                    return;
+                }
+
+                // Place into the appropriate UI container at next available slot
+                const containerIndex = this._findAppropriateContainer(item);
+                const targetContainer = uiContainers[containerIndex];
+                if (targetContainer) {
+                    const slotKey = this._findNextAvailableSlot(targetContainer);
+                    if (slotKey) {
+                        targetContainer.data.items[slotKey] = { uuid: item.uuid };
+                        await targetContainer.render();
+                        if (ui.BG3HOTBAR.components.container.components.filterContainer) {
+                            await ui.BG3HOTBAR.components.container.components.filterContainer.updateExtendedFilter();
+                        }
+                        // No need to persist here; flags were already updated above
+                        return;
+                    }
+                }
+
+                // Fallback: full regenerate to sync with flags if anything above failed
+                await ui.BG3HOTBAR.generate(currentToken);
+            } catch (e) {
+                console.warn('BG3 Hotbar | UI update on item create failed, regenerating...', e);
+                await ui.BG3HOTBAR.generate(currentToken);
+            }
         }
 
     }
@@ -528,6 +570,9 @@ export class ItemUpdateManager {
             // Clean up invalid items and re-render for the current token
             await this.cleanupInvalidItems(currentToken.actor);
             await ui.BG3HOTBAR.refresh();
+            if (ui.BG3HOTBAR.components?.container?.components?.filterContainer) {
+                await ui.BG3HOTBAR.components.container.components.filterContainer.updateExtendedFilter();
+            }
         }
     }
 

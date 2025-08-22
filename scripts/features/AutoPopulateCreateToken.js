@@ -94,6 +94,8 @@ export class AutoPopulateCreateToken {
         if (!token?.actor) return;
 
         try {
+            // Do not auto-populate for player characters
+            if (token.actor.type === 'character') return;
             // Check if user has permission to modify this token
             if (!token.actor.canUserModify(game.user, "update")) {
                 console.debug("BG3 Inspired Hotbar | User lacks permission to modify token actor");
@@ -200,11 +202,12 @@ export class AutoPopulateCreateToken {
                     const enforcePreparation = shouldEnforceSpellPreparation(actor, manager.currentTokenId);
                         
                     if (enforcePreparation) {
-                        const prep = item.system?.preparation;
+                        const method = item.system?.method ?? item.system?.preparation?.mode;
+                        const prepared = item.system?.prepared ?? item.system?.preparation?.prepared;
                         // Skip if it's an unprepared "prepared" spell
-                        if (!prep?.prepared && prep?.mode === "prepared") continue;
+                        if (!prepared && method === "prepared") continue;
                         // Include if it's prepared or has a valid casting mode
-                        if (!prep?.prepared && !["pact", "apothecary", "atwill", "innate", "ritual", "always"].includes(prep?.mode)) continue;
+                        if (!prepared && !["pact", "apothecary", "atwill", "innate", "ritual", "always"].includes(method)) continue;
                     }
                 }
                 
@@ -233,14 +236,14 @@ export class AutoPopulateCreateToken {
             
             if (itemsWithActivities.length === 0) return;
 
-            // Sort items
-            AutoSort._sortItems(itemsWithActivities);
+            // Sort items using unified sorter with fresh data
+            const sortedItems = await AutoSort.sortUuidEntries(itemsWithActivities);
 
             // Place items in grid format (rows first: left to right, then down)
             let x = 0;
             let y = 0;
 
-            for (const item of itemsWithActivities) {
+            for (const item of sortedItems) {
                 if (y >= container.rows) break; // Stop if we exceed container rows
 
                 const gridKey = `${x}-${y}`;
@@ -328,7 +331,7 @@ export class AutoPopulateCreateToken {
     }
 
     static async _populateCommonActions(actor, manager) {
-        if(actor.type == 'vehicule') return;
+        if(actor.type == 'vehicle') return;
         try {
             const ids = await this._getCombatActionsList(actor);
             let count = 0;

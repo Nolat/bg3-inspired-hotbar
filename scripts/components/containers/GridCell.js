@@ -45,7 +45,10 @@ export class GridCell extends BG3Component {
                 },
                 ...await this.getItemUses()
             };
-            if(itemData.type === "spell") data = {...data, ...{preparationMode: itemData.system?.preparation?.mode, level: itemData.system?.level}};
+            if(itemData.type === "spell") {
+                const method = itemData.system?.method ?? itemData.system?.preparation?.mode;
+                data = {...data, ...{preparationMode: method, level: itemData.system?.level}};
+            }
             if(itemData.type === 'feat') data = {...data, ...{featType: itemData.system?.type?.value || 'default'}};
         }
         return data;
@@ -161,16 +164,28 @@ export class GridCell extends BG3Component {
                 try {
                     const itemData = await this.item;
                     if (itemData?.sheet) {
-                        const sheet = itemData.sheet.render(true);
-                        if (sheet?.activateTab) {
-                            setTimeout(() => {
-                                try {
-                                    sheet.activateTab("activities");
-                                } catch (err) {
-                                    // No activities tab found
+                        const sheet = itemData.sheet;
+                        sheet.render(true);
+                        setTimeout(() => {
+                            try {
+                                // Prefer sheet API when available
+                                if (typeof sheet.activateTab === 'function') {
+                                    sheet.activateTab('activities');
+                                    return;
                                 }
-                            }, 100);
-                        }
+                                // Try tabs plugin on ApplicationV2
+                                if (Array.isArray(sheet._tabs) && typeof sheet._tabs[0]?.activate === 'function') {
+                                    sheet._tabs[0].activate('activities');
+                                    return;
+                                }
+                                // Fallback: click the activities tab button if present
+                                const root = sheet.element ?? sheet._element ?? sheet._html?.[0];
+                                const tabBtn = root?.querySelector?.('[data-tab="activities"], button[data-tab="activities"], a[data-tab="activities"]');
+                                if (tabBtn && typeof tabBtn.click === 'function') tabBtn.click();
+                            } catch (err) {
+                                // No activities tab found or activation failed
+                            }
+                        }, 150);
                     }
                 } catch (error) {
                     console.error("BG3 Inspired Hotbar | Error configuring activities:", error);
@@ -417,7 +432,7 @@ export class GridCell extends BG3Component {
 
                 switch (itemData.type) {
                     case 'spell':
-                        this.element.dataset.preparationMode = itemData.system.preparation?.mode;
+                        this.element.dataset.preparationMode = itemData.system.method ?? itemData.system.preparation?.mode;
                         this.element.dataset.level = itemData.system.level;
                         break;
                     case 'feat':

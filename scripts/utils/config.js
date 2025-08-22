@@ -471,7 +471,7 @@ export function updateSettingsDisplay() {
                     },
                     {
                         label: 'BG3.Settings.Menu.Global.Sub.Opacity',
-                        fields: ['normalOpacity', 'fadedOpacity', 'fadeOutDelay', 'autoHideCombat']
+                        fields: ['normalOpacity', 'fadedOpacity', 'fadeOutDelay', 'autoHideCombat', 'abilityButtonHover']
                     }
                 ]
             },
@@ -1022,6 +1022,19 @@ export function registerSettings() {
         config: true,
         type: Boolean,
         default: false
+    });
+
+    // Ability Button visibility
+    game.settings.register(BG3CONFIG.MODULE_NAME, 'abilityButtonHover', {
+        name: 'Show Ability Button only on hover',
+        hint: 'Hide the ability button by default and only show it while hovering the BG3 Hotbar (or its children).',
+        scope: 'client',
+        config: true,
+        type: Boolean,
+        default: false,
+        onChange: (value) => {
+            if (ui.BG3HOTBAR?.element?.[0]) ui.BG3HOTBAR.element[0].dataset.abilityHover = value;
+        }
     });
 
     // Hotbar Settings

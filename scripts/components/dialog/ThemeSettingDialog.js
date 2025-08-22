@@ -278,9 +278,22 @@ export class ThemeSettingDialog extends FormApplication {
         if(current === undefined) current = game.settings.get(BG3CONFIG.MODULE_NAME, 'themeOption');
         current = current.toLowerCase();
 
-        let coreThemes = (await FilePicker.browse("user", `modules/${BG3CONFIG.MODULE_NAME}/scripts/themes`, { extensions: [".json"] })).files;
+        let coreThemes = [];
+        try {
+            const res = await FilePicker.browse("user", `modules/${BG3CONFIG.MODULE_NAME}/scripts/themes`, { extensions: [".json"] });
+            coreThemes = res.files ?? [];
+        } catch (e) {
+            coreThemes = [];
+        }
         if(coreThemes.length) coreThemes = coreThemes.map(t => t.split("/")[t.split("/").length - 1].replace(/\.json/gi, ""));
-        let customThemes = (await FilePicker.browse("user", `modules/${BG3CONFIG.MODULE_NAME}/storage/themes`, { extensions: [".json"] })).files;
+
+        let customThemes = [];
+        try {
+            const res = await FilePicker.browse("user", `modules/${BG3CONFIG.MODULE_NAME}/storage/themes`, { extensions: [".json"] });
+            customThemes = res.files ?? [];
+        } catch (e) {
+            customThemes = [];
+        }
         if(customThemes.length) customThemes = customThemes.map(t => t.split("/")[t.split("/").length - 1].replace(/\.json/gi, ""));
 
         let html = `<option value="custom">Custom</option><optgroup label="Core">${coreThemes.map(t => `<option data-folder="scripts" value="${t}">${t}</option>`).join('')}</optgroup><optgroup label="Custom">${customThemes.map(t => `<option data-folder="storage" value="${t}">${t}</option>`).join('')}</optgroup>`;

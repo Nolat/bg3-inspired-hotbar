@@ -10,7 +10,10 @@ export class ControlContainer extends BG3Component {
     }
 
     get classes() {
-        return [...["bg3-control-container"], ...(game.settings.get(BG3CONFIG.MODULE_NAME, 'masterLockEnabled')) ? ['locked'] : []]
+        return [
+            "bg3-control-container",
+            ...(game.settings.get(BG3CONFIG.MODULE_NAME, 'masterLockEnabled') ? ['locked'] : [])
+        ]
     }
 
     get btnData() {
@@ -76,7 +79,7 @@ export class ControlContainer extends BG3Component {
                 "hotbar-control-button",
                 ...(game.settings.get(BG3CONFIG.MODULE_NAME, 'masterLockEnabled') ? ['locked'] : [])
             ],
-            icon: 'fa-unlock',
+            icon: game.settings.get(BG3CONFIG.MODULE_NAME, 'masterLockEnabled') ? 'fa-lock' : 'fa-unlock',
             title: 'Lock hotbar settings<br>(Right-click for options)',
             hasChildren: true,
             events: {

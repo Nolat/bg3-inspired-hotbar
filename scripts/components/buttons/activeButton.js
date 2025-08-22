@@ -65,7 +65,7 @@ export class ActiveButton extends BG3Component {
                     label: "Delete",
                     callback: async () => {
                         await this.data.item.delete();
-                        this._parent.render();
+                        // Rerender handled by global active effect hooks (_onUpdateActive)
                     }
                 },
                 cancel: {

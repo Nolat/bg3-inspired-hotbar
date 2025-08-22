@@ -50,7 +50,6 @@
   left: 0;
   width: 100%;
   height: 100%;
-  /* border-radius: 50%; */
   overflow: hidden;
   pointer-events: none;
 }
@@ -343,6 +342,17 @@
   transition: all 0.2s ease;
 }
 
+/* Hide ability button unless hovering the hotbar when setting is enabled */
+#bg3-hotbar-container[data-ability-hover="true"] .ability-button {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#bg3-hotbar-container[data-ability-hover="true"]:hover .ability-button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 #bg3-hotbar-container .ability-button i {
   flex: 1;
   height: 100%;
@@ -452,7 +462,7 @@
     border: calc(var(--primary-border-width)*2) solid var(--primary-border-color);
   }
   
-  #bg3-hotbar-container .bg3-portrait-container[data-shape="round"]:not([data-border="none"]) .portrait-image-container, #bg3-hotbar-container .bg3-portrait-container[data-shape="round"] .health-overlay, #bg3-hotbar-container .bg3-portrait-container[data-shape="round"] .portrait-image-container::before, #bg3-hotbar-container .bg3-portrait-container[data-shape="round"] .portrait-image-container::after {
+  #bg3-hotbar-container .bg3-portrait-container[data-shape="round"]:not([data-border="none"]) .portrait-image-container, #bg3-hotbar-container .bg3-portrait-container[data-shape="round"]:not(.use-bend-mask) .health-overlay, #bg3-hotbar-container .bg3-portrait-container[data-shape="round"] .portrait-image-container::before, #bg3-hotbar-container .bg3-portrait-container[data-shape="round"] .portrait-image-container::after {
     border-radius: 50%;
   }
   
@@ -477,4 +487,24 @@
     -webkit-mask-repeat: no-repeat;
     position: relative;
     mask-size: 100% 100%;
+  }
+
+  /* When bend mask is active, allow the inner subcontainer to overflow so expanded menus are not clipped */
+  #bg3-hotbar-container .bg3-portrait-container .portrait-image-subcontainer[data-bend-mode="true"] {
+    overflow: visible;
+  }
+
+  /* Add a helper class from JS to indicate we are using bend mask so health overlay is not force-rounded */
+  #bg3-hotbar-container .bg3-portrait-container.use-bend-mask .health-overlay {
+    border-radius: 0;
+  }
+
+  /* When using bend mask, allow the portrait container to overflow so taller images aren't clipped */
+  #bg3-hotbar-container .bg3-portrait-container.use-bend-mask .portrait-image-container {
+    overflow: visible;
+  }
+
+  /* Ensure scaling is centered so expansion doesn't shift to a corner */
+  #bg3-hotbar-container .portrait-image-subcontainer {
+    transform-origin: center center;
   }
